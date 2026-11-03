@@ -1,0 +1,109 @@
+<view class="page-shell profile-page">
+  <view wx:if="{{user}}" class="profile-hero">
+    <view class="profile-hero-head">
+      <view class="profile-identity">
+        <view class="profile-avatar">{{userInitial}}</view>
+        <view class="profile-user-copy">
+          <text class="profile-name">{{user.realName}}</text>
+          <text class="profile-student-no">{{user.studentNo}}</text>
+          <text class="profile-credit-status">{{creditStatusText}}</text>
+        </view>
+      </view>
+
+      <view class="profile-score-block">
+        <text class="profile-score-value">{{user.creditScore}}</text>
+        <text class="profile-score-label">信用分</text>
+      </view>
+    </view>
+
+    <view class="profile-metric-strip">
+      <view class="profile-metric-item">
+        <text class="profile-metric-value">{{user.statistics.totalReservations}}</text>
+        <text class="profile-metric-label">累计预约</text>
+      </view>
+      <view class="profile-metric-item">
+        <text class="profile-metric-value">{{user.statistics.completedReservations}}</text>
+        <text class="profile-metric-label">正常完成</text>
+      </view>
+      <view class="profile-metric-item">
+        <text class="profile-metric-value">{{user.statistics.violationCount}}</text>
+        <text class="profile-metric-label">违约次数</text>
+      </view>
+      <view class="profile-metric-item">
+        <text class="profile-metric-value">{{ruleHints.blacklistDays}}</text>
+        <text class="profile-metric-label">黑名单天数</text>
+      </view>
+    </view>
+
+    <view class="action-row profile-actions">
+      <button class="secondary-btn" bindtap="openSeatPage">去选座</button>
+      <button class="secondary-btn" bindtap="openReservations">我的预约</button>
+    </view>
+  </view>
+
+  <view wx:if="{{user}}" class="profile-sheet">
+    <view class="profile-section">
+      <view class="profile-section-head">
+        <view>
+          <text class="section-title">规则阈值</text>
+          <text class="section-subtitle">展示信用分、黑名单阈值与时长，让读者端和后台规则保持同一套口径。</text>
+        </view>
+      </view>
+
+      <view class="profile-rule-list">
+        <view class="profile-rule-row">
+          <text class="profile-rule-label">初始信用分</text>
+          <text class="profile-rule-value">{{ruleHints.initialCreditScore}}</text>
+        </view>
+        <view class="profile-rule-row">
+          <text class="profile-rule-label">黑名单阈值</text>
+          <text class="profile-rule-value">{{ruleHints.blacklistCreditThreshold}}</text>
+        </view>
+        <view class="profile-rule-row">
+          <text class="profile-rule-label">黑名单时长</text>
+          <text class="profile-rule-value">{{ruleHints.blacklistDays}} 天</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="profile-divider"></view>
+
+    <view class="profile-section">
+      <view class="profile-section-head">
+        <view>
+          <text class="section-title">信用记录</text>
+          <text class="section-subtitle">每次扣分或加分都会沉淀到这里，用于展示系统信用机制闭环。</text>
+        </view>
+      </view>
+
+      <view wx:if="{{creditLogs.length}}" class="profile-log-list">
+        <view class="profile-log-row" wx:for="{{creditLogs}}" wx:key="id">
+          <view class="profile-log-marker"></view>
+          <view class="profile-log-main">
+            <view class="profile-log-head">
+              <text class="profile-log-title">{{item.changeReason}}</text>
+              <view class="profile-log-delta {{item.scoreDelta > 0 ? 'profile-log-delta--positive' : item.scoreDelta < 0 ? 'profile-log-delta--negative' : ''}}">
+                <text>{{item.scoreDelta > 0 ? '+' : ''}}{{item.scoreDelta}}</text>
+              </view>
+            </view>
+            <text class="profile-log-time">{{item.createdAt}}</text>
+            <text class="profile-log-desc">变更后信用分：{{item.scoreAfter}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:else class="empty-state profile-empty-state">
+        <text class="empty-title">暂时没有信用变更记录</text>
+        <text class="empty-desc">当出现签到违约、管理员调整或其他信用变化时，会在这里自动展示。</text>
+      </view>
+    </view>
+
+    <view class="profile-divider"></view>
+
+    <view class="profile-settings">
+      <text class="section-title">账号管理</text>
+      <text class="section-subtitle">退出后会清除当前登录态，下次进入需重新登录。</text>
+      <button class="profile-logout-btn" bindtap="logout">退出登录</button>
+    </view>
+  </view>
+</view>

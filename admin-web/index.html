@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>图书馆座位管理后台</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient-layer" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <div class="brand-block">
+            <div class="brand-mark" aria-hidden="true">LS</div>
+            <div class="brand-copy">
+              <h1>图书馆管理台</h1>
+            </div>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="后台导航">
+          <button class="nav-link" data-nav-target="dashboardSection" type="button">
+            <span class="nav-icon nav-icon--dashboard" aria-hidden="true"></span>
+            <span class="nav-copy">
+              <strong>数据总览</strong>
+              <small>关键状态与风险</small>
+            </span>
+          </button>
+
+          <button class="nav-link" data-nav-target="reportSection" type="button">
+            <span class="nav-icon nav-icon--report" aria-hidden="true"></span>
+            <span class="nav-copy">
+              <strong>运营报表</strong>
+              <small>趋势、热度与活跃度</small>
+            </span>
+          </button>
+
+          <button class="nav-link" data-nav-target="noticeSection" type="button">
+            <span class="nav-icon nav-icon--notice" aria-hidden="true"></span>
+            <span class="nav-copy">
+              <strong>公告管理</strong>
+              <small>发布、筛选与维护</small>
+            </span>
+          </button>
+
+          <button class="nav-link" data-nav-target="reservationSection" type="button">
+            <span class="nav-icon nav-icon--reservation" aria-hidden="true"></span>
+            <span class="nav-copy">
+              <strong>预约管理</strong>
+              <small>检索、释放与代签退</small>
+            </span>
+          </button>
+
+          <button class="nav-link" data-nav-target="userSection" type="button">
+            <span class="nav-icon nav-icon--user" aria-hidden="true"></span>
+            <span class="nav-copy">
+              <strong>用户管理</strong>
+              <small>全部账号与身份</small>
+            </span>
+          </button>
+
+          <button class="nav-link" data-nav-target="resourceSection" type="button">
+            <span class="nav-icon nav-icon--seat" aria-hidden="true"></span>
+            <span class="nav-copy">
+              <strong>座位资源</strong>
+              <small>座位与分区双编辑</small>
+            </span>
+          </button>
+
+          <button class="nav-link" data-nav-target="configSection" type="button">
+            <span class="nav-icon nav-icon--config" aria-hidden="true"></span>
+            <span class="nav-copy">
+              <strong>规则配置</strong>
+              <small>按组折叠维护</small>
+            </span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer" aria-hidden="true"></div>
+      </aside>
+
+      <div class="main-shell">
+        <header class="topbar topbar--minimal">
+          <div class="topbar-side">
+            <div class="account-menu" data-account-menu>
+              <button
+                id="accountMenuBtn"
+                class="account-trigger"
+                type="button"
+                aria-expanded="false"
+                aria-controls="accountMenuPanel"
+              >
+                <div class="topbar-user">
+                  <div class="user-avatar" aria-hidden="true">管</div>
+                  <div class="user-copy">
+                    <span class="user-label">个人信息</span>
+                    <div id="sessionBadge" class="sidebar-session">未登录</div>
+                  </div>
+                </div>
+                <span class="account-caret" aria-hidden="true"></span>
+              </button>
+
+              <div id="accountMenuPanel" class="account-panel hidden">
+                <div class="account-panel-head">
+                  <div>
+                    <h3>访问设置</h3>
+                  </div>
+                </div>
+
+                <div class="account-status-strip">
+                  <span id="healthBadge" class="meta-chip" data-state="pending">待检测</span>
+                  <span id="lastSyncTime" class="meta-chip" data-state="idle">尚未同步</span>
+                  <span id="accessModeBadge" class="meta-chip" data-state="pending">等待识别访问模式</span>
+                </div>
+
+                <p id="healthMeta" class="health-text">
+                  检测接口连接状态与最近同步时间。
+                </p>
+
+                <label class="api-field account-field">
+                  <span>后端地址</span>
+                  <input
+                    id="apiBaseInput"
+                    type="text"
+                    placeholder="https://your-server.example.com 或你的正式域名"
+                  />
+                </label>
+
+                <div class="account-link-row">
+                  <a id="adminEntryLink" class="ghost-btn" href="/admin/" target="_blank" rel="noreferrer">
+                    打开后台入口
+                  </a>
+                  <button id="refreshAllBtn" class="primary-btn" type="button">刷新数据</button>
+                </div>
+
+                <div class="toolbar-actions account-actions">
+                  <button id="saveApiBaseBtn" class="ghost-btn" type="button">保存地址</button>
+                  <button id="logoutBtn" class="ghost-btn hidden" type="button">退出登录 / 切换账号</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div id="appStatus" class="status-banner hidden"></div>
+
+        <section id="loginPanel" class="login-shell">
+          <div class="login-copy">
+            <h2>统一后台工作台</h2>
+            <p>
+              管理公告、预约、读者、座位与系统规则。
+            </p>
+            <div class="login-pills">
+              <span id="loginEntryHint" class="tag-pill">正式后台入口</span>
+              <span class="tag-pill">管理员访问</span>
+            </div>
+          </div>
+
+          <form id="loginForm" class="login-form">
+            <label class="field">
+              <span>管理员账号</span>
+              <input id="loginStudentNo" name="studentNo" type="text" placeholder="例如 LIB001" required />
+            </label>
+
+            <label class="field">
+              <span>密码</span>
+              <input id="loginPassword" name="password" type="password" autocomplete="current-password" required />
+            </label>
+
+            <button class="primary-btn login-submit" type="submit">进入后台</button>
+          </form>
+        </section>
+
+        <main id="workspace" class="workspace hidden">
+          <section id="dashboardSection" class="view-panel is-active">
+            <div class="view-scroll">
+              <section class="panel-hero panel-hero--compact workspace-hero">
+                <div class="panel-hero-copy">
+                  <span class="section-kicker">Overview</span>
+                  <h3>运行数据总览</h3>
+                  <p>
+                    座位、预约、公告和信用风险集中展示。
+                  </p>
+                </div>
+              </section>
+
+              <div id="summaryCards" class="stats-strip"></div>
+
+              <div class="workspace-grid two-col">
+                <section class="content-block">
+                  <div class="block-head">
+                    <div>
+                      <h3>预约状态</h3>
+                      <span>实时分布</span>
+                    </div>
+                  </div>
+                  <div id="statusDistribution" class="plain-list"></div>
+                </section>
+
+                <section class="content-block">
+                  <div class="block-head">
+                    <div>
+                      <h3>信用预警</h3>
+                      <span>低信用分与黑名单</span>
+                    </div>
+                  </div>
+                  <div id="creditWarnings" class="plain-list"></div>
+                </section>
+              </div>
+
+              <div class="workspace-grid two-col">
+                <section class="content-block">
+                  <div class="block-head">
+                    <div>
+                      <h3>最新预约</h3>
+                      <span>最近记录</span>
+                    </div>
+                  </div>
+                  <div id="recentReservations" class="plain-list"></div>
+                </section>
+
+                <section class="content-block">
+                  <div class="block-head">
+                    <div>
+                      <h3>最新公告</h3>
+                      <span>发布动态</span>
+                    </div>
+                  </div>
+                  <div id="recentNotices" class="plain-list"></div>
+                </section>
+              </div>
+            </div>
+          </section>
+
+          <section id="reportSection" class="view-panel hidden">
+            <div class="view-scroll">
+              <section class="panel-hero panel-hero--compact">
+                <div class="panel-hero-copy">
+                  <span class="section-kicker">Report</span>
+                  <h3>运营报表</h3>
+                  <p>按时间范围查看使用率、活跃读者、违约情况与高峰时段。</p>
+                </div>
+              </section>
+
+              <form id="reportFilterForm" class="toolbar-filter">
+                <label class="field">
+                  <span>开始日期</span>
+                  <input id="reportStartDate" type="date" />
+                </label>
+
+                <label class="field">
+                  <span>结束日期</span>
+                  <input id="reportEndDate" type="date" />
+                </label>
+
+                <button class="primary-btn compact-btn" type="submit">刷新报表</button>
+              </form>
+
+              <div id="reportStatusStrip" class="tag-strip"></div>
+              <div id="reportSummaryCards" class="stats-strip report-strip"></div>
+
+              <div class="workspace-grid two-col">
+                <section class="content-block">
+                  <div class="block-head">
+                    <div>
+                      <h3>分区使用情况</h3>
+                      <span>热度与使用率</span>
+                    </div>
+                  </div>
+                  <div id="reportZoneUsage" class="report-list"></div>
+                </section>
+
+                <section class="content-block">
+                  <div class="block-head">
+                    <div>
+                      <h3>活跃读者</h3>
+                      <span>按时间窗口统计</span>
+                    </div>
+                  </div>
+                  <div id="reportTopReaders" class="report-list"></div>
+                </section>
+              </div>
+
+              <div class="workspace-grid two-col">
+                <section class="content-block">
+                  <div class="block-head">
+                    <div>
+                      <h3>每日趋势</h3>
+                      <span>按天汇总</span>
+                    </div>
+                  </div>
+                  <div id="reportDailyUsage" class="report-list"></div>
+                </section>
+
+                <section class="content-block">
+                  <div class="block-head">
+                    <div>
+                      <h3>违约统计</h3>
+                      <span>异常概览</span>
+                    </div>
+                  </div>
+                  <div id="reportViolationStats" class="report-list"></div>
+                </section>
+              </div>
+
+              <section class="content-block">
+                <div class="block-head">
+                  <div>
+                    <h3>高峰时段</h3>
+                    <span>按预约开始时间统计</span>
+                  </div>
+                </div>
+                <div id="reportHourlyHeatmap" class="heatmap-grid"></div>
+              </section>
+            </div>
+          </section>
+
+          <section id="noticeSection" class="view-panel hidden">
+            <div class="view-scroll">
+              <section class="panel-hero panel-hero--compact">
+                <div class="panel-hero-copy">
+                  <span class="section-kicker">Notice</span>
+                  <h3>公告管理</h3>
+                  <p>维护公告内容、发布对象与上下线状态。</p>
+                </div>
+              </section>
+
+              <div class="workspace-grid notice-grid">
+                <section class="content-block form-block sticky-card">
+                  <div class="block-head">
+                    <div>
+                      <h3 id="noticeFormTitle">发布新公告</h3>
+                      <span>编辑与发布</span>
+                    </div>
+                    <div class="section-actions">
+                      <button id="resetNoticeFormBtn" class="ghost-btn" type="button">新建公告</button>
+                    </div>
+                  </div>
+
+                  <form id="noticeForm" class="form-stack">
+                    <details class="form-details" open>
+                      <summary>基础内容</summary>
+                      <div class="form-layout">
+                        <label class="field field-full">
+                          <span>公告标题</span>
+                          <input id="noticeTitle" name="title" type="text" required />
+                        </label>
+
+                        <label class="field field-full">
+                          <span>公告内容</span>
+                          <textarea id="noticeContent" name="content" rows="6" required></textarea>
+                        </label>
+                      </div>
+                    </details>
+
+                    <details class="form-details">
+                      <summary>发布设置</summary>
+                      <div class="form-layout">
+                        <label class="field">
+                          <span>公告类型</span>
+                          <select id="noticeType" name="noticeType">
+                            <option value="system">系统通知</option>
+                            <option value="maintenance">维护通知</option>
+                            <option value="activity">活动通知</option>
+                            <option value="rule">规则说明</option>
+                          </select>
+                        </label>
+
+                        <label class="field">
+                          <span>发布对象</span>
+                          <select id="noticeAudience" name="audience">
+                            <option value="all">全部用户</option>
+                            <option value="reader">仅读者</option>
+                            <option value="admin">仅管理员</option>
+                          </select>
+                        </label>
+
+                        <label class="field">
+                          <span>公告状态</span>
+                          <select id="noticeStatus" name="status">
+                            <option value="draft">草稿</option>
+                            <option value="published">已发布</option>
+                            <option value="offline">已下线</option>
+                          </select>
+                        </label>
+
+                        <label class="field">
+                          <span>发布时间</span>
+                          <input id="noticePublishAt" name="publishAt" type="datetime-local" />
+                        </label>
+
+                        <label class="field">
+                          <span>过期时间</span>
+                          <input id="noticeExpireAt" name="expireAt" type="datetime-local" />
+                        </label>
+                      </div>
+                    </details>
+
+                    <div class="button-row">
+                      <button class="primary-btn" type="submit">保存公告</button>
+                      <button id="clearNoticeBtn" class="ghost-btn" type="button">清空内容</button>
+                    </div>
+                  </form>
+                </section>
+
+                <section class="content-block list-shell">
+                  <div class="block-head">
+                    <div>
+                      <h3>公告列表</h3>
+                      <span>筛选与维护</span>
+                    </div>
+                  </div>
+
+                  <form id="noticeFilterForm" class="toolbar-filter compact-filter">
+                    <label class="field">
+                      <span>关键词</span>
+                      <input id="noticeKeyword" type="text" placeholder="标题 / 内容" />
+                    </label>
+
+                    <label class="field">
+                      <span>状态</span>
+                      <select id="noticeFilterStatus">
+                        <option value="">全部状态</option>
+                        <option value="draft">草稿</option>
+                        <option value="published">已发布</option>
+                        <option value="offline">已下线</option>
+                      </select>
+                    </label>
+
+                    <label class="field">
+                      <span>对象</span>
+                      <select id="noticeFilterAudience">
+                        <option value="">全部对象</option>
+                        <option value="all">全部用户</option>
+                        <option value="reader">仅读者</option>
+                        <option value="admin">仅管理员</option>
+                      </select>
+                    </label>
+
+                    <button class="primary-btn compact-btn" type="submit">查询</button>
+                  </form>
+
+                  <div id="noticeList" class="stack-list"></div>
+                </section>
+              </div>
+            </div>
+          </section>
+
+          <section id="reservationSection" class="view-panel hidden">
+            <div class="view-scroll">
+              <section class="panel-hero panel-hero--compact">
+                <div class="panel-hero-copy">
+                  <span class="section-kicker">Reservation</span>
+                  <h3>预约管理</h3>
+                  <p>检索预约记录，处理代签退、释放预约和异常状态。</p>
+                </div>
+              </section>
+
+              <form id="reservationFilterForm" class="toolbar-filter">
+                <label class="field">
+                  <span>关键词</span>
+                  <input id="reservationKeyword" type="text" placeholder="预约号 / 学号 / 姓名 / 座位号" />
+                </label>
+
+                <label class="field">
+                  <span>预约状态</span>
+                  <select id="reservationStatus">
+                    <option value="">全部状态</option>
+                    <option value="reserved">已预约</option>
+                    <option value="checked_in">已签到</option>
+                    <option value="temporary_leave">暂离中</option>
+                    <option value="completed">已完成</option>
+                    <option value="cancelled">已取消</option>
+                    <option value="no_show">未签到违约</option>
+                    <option value="violation">违约结束</option>
+                    <option value="admin_released">管理员释放</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>预约日期</span>
+                  <input id="reservationDate" type="date" />
+                </label>
+
+                <button class="primary-btn compact-btn" type="submit">查询预约</button>
+              </form>
+
+              <div id="reservationSummary" class="tag-strip"></div>
+
+              <section class="content-block">
+                <div class="block-head">
+                  <div>
+                    <h3>预约列表</h3>
+                    <span>支持代签退与释放预约</span>
+                  </div>
+                </div>
+
+                <section class="table-block table-block--tall">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>预约号</th>
+                        <th>读者</th>
+                        <th>座位</th>
+                        <th>日期时段</th>
+                        <th>状态</th>
+                        <th>违约类型</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="reservationTableBody"></tbody>
+                  </table>
+                </section>
+              </section>
+            </div>
+          </section>
+
+          <section id="userSection" class="view-panel hidden">
+            <div class="view-scroll">
+              <section class="panel-hero panel-hero--compact">
+                <div class="panel-hero-copy">
+                  <span class="section-kicker">Reader</span>
+                  <h3>左侧检索用户，右侧只保留当前处理对象。</h3>
+                  <p>把信用调整面板固定住，减少在读者列表和编辑区域之间来回滚动。</p>
+                </div>
+              </section>
+
+              <div class="workspace-grid user-grid">
+                <section class="content-block">
+                  <div class="block-head">
+                    <div>
+                      <h3>用户筛选</h3>
+                      <span>全部账号与黑名单</span>
+                    </div>
+                  </div>
+
+                  <form id="userFilterForm" class="toolbar-filter compact-filter">
+                    <label class="field">
+                      <span>关键词</span>
+                      <input id="userKeyword" type="text" placeholder="学号 / 姓名 / 身份" />
+                    </label>
+
+                    <label class="checkbox-field">
+                      <input id="blacklistOnly" type="checkbox" />
+                      <span>仅看黑名单</span>
+                    </label>
+
+                    <button class="primary-btn compact-btn" type="submit">查询</button>
+                  </form>
+
+                  <section class="table-block table-block--tall">
+                    <table class="data-table user-table">
+                      <thead>
+                        <tr>
+                          <th>选择</th>
+                          <th>学号</th>
+                          <th>姓名</th>
+                          <th>身份</th>
+                          <th>信用分</th>
+                          <th>违约次数</th>
+                          <th>黑名单</th>
+                        </tr>
+                      </thead>
+                      <tbody id="userTableBody"></tbody>
+                    </table>
+                  </section>
+                </section>
+
+                <section class="content-block form-block sticky-card">
+                  <div class="block-head">
+                    <div>
+                      <h3>信用调整</h3>
+                      <span>人工处理</span>
+                    </div>
+                  </div>
+
+                  <div id="selectedUserCard" class="selected-card empty-state">
+                    请先选择一个账号，再填写调整分值和原因。
+                  </div>
+
+                  <form id="creditForm" class="form-stack">
+                    <div class="form-layout">
+                      <label class="field">
+                        <span>调整分值</span>
+                        <input id="creditDelta" type="number" step="1" placeholder="例如 -10 或 5" required />
+                      </label>
+
+                      <label class="field field-full">
+                        <span>调整原因</span>
+                        <textarea
+                          id="creditReason"
+                          rows="4"
+                          placeholder="例如：管理员核验后补扣未签到违约分"
+                          required
+                        ></textarea>
+                      </label>
+                    </div>
+
+                    <div class="button-row">
+                      <button class="primary-btn" type="submit">提交调整</button>
+                      <button id="creditPresetPenaltyBtn" class="ghost-btn" type="button">填入 -10 示例</button>
+                    </div>
+                  </form>
+                </section>
+              </div>
+            </div>
+          </section>
+
+          <section id="resourceSection" class="view-panel hidden">
+            <div class="view-scroll resource-scroll">
+              <div id="resourceEditorTabs" class="editor-switch resource-switch">
+                <button class="editor-tab is-active" data-editor-mode="seat" type="button">座位管理</button>
+                <button class="editor-tab" data-editor-mode="zone" type="button">分区管理</button>
+              </div>
+
+              <section id="seatEditorPanel" class="resource-panel is-active">
+                <section class="content-block resource-list-card">
+                  <div class="block-head">
+                    <div>
+                      <h3>座位列表</h3>
+                      <span>筛选、查看和处理当前座位资源</span>
+                    </div>
+                  </div>
+
+                  <div id="seatSummary" class="tag-strip seat-summary-strip"></div>
+
+                  <form id="seatFilterForm" class="toolbar-filter compact-filter">
+                    <label class="field">
+                      <span>关键词</span>
+                      <input id="seatKeyword" type="text" placeholder="座位号 / 分区" />
+                    </label>
+
+                    <label class="field">
+                      <span>分区</span>
+                      <select id="seatZoneCode">
+                        <option value="">全部分区</option>
+                      </select>
+                    </label>
+
+                    <label class="field">
+                      <span>座位状态</span>
+                      <select id="seatFilterStatus">
+                        <option value="">全部状态</option>
+                        <option value="available">可用</option>
+                        <option value="disabled">停用</option>
+                        <option value="maintenance">维护中</option>
+                      </select>
+                    </label>
+
+                    <button class="primary-btn compact-btn" type="submit">查询</button>
+                  </form>
+
+                  <div class="table-toolbar">
+                    <div class="toolbar-actions">
+                      <button id="createSeatBtn" class="primary-btn" type="button">新建座位</button>
+                      <button id="resetSeatFilterBtn" class="ghost-btn" type="button">重置筛选</button>
+                    </div>
+                    <div class="toolbar-actions">
+                      <button id="refreshSeatListBtn" class="ghost-btn" type="button">刷新列表</button>
+                    </div>
+                  </div>
+
+                  <section class="table-block table-block--tall">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>序号</th>
+                          <th>座位号</th>
+                          <th>楼层 / 区域</th>
+                          <th>桌组 / 类型</th>
+                          <th>属性</th>
+                          <th>状态</th>
+                          <th>更新时间</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody id="seatTableBody"></tbody>
+                    </table>
+                  </section>
+                </section>
+
+                <section class="content-block form-block resource-form-card">
+                  <div class="block-head">
+                    <div>
+                      <h3>座位编辑</h3>
+                      <span>新建或修改当前座位信息</span>
+                    </div>
+                    <div class="section-actions">
+                      <button id="resetSeatEditorBtn" class="ghost-btn" type="button">清空表单</button>
+                    </div>
+                  </div>
+
+                  <form id="seatEditorForm" class="form-layout">
+                    <label class="field">
+                      <span>座位编号</span>
+                      <input id="seatCodeInput" type="text" placeholder="Q3-A-01" required />
+                    </label>
+
+                    <label class="field">
+                      <span>所属分区</span>
+                      <select id="seatEditorZoneCode" required>
+                        <option value="">选择分区</option>
+                      </select>
+                    </label>
+
+                    <label class="field">
+                      <span>桌组编号</span>
+                      <input id="seatTableCodeInput" type="text" placeholder="A" required />
+                    </label>
+
+                    <label class="field">
+                      <span>座位序号</span>
+                      <input id="seatSeqInput" type="number" min="1" max="999" required />
+                    </label>
+
+                    <label class="field">
+                      <span>座位类型</span>
+                      <input id="seatTypeInput" type="text" placeholder="4人桌 / 8人桌" required />
+                    </label>
+
+                    <label class="field">
+                      <span>容纳人数</span>
+                      <input id="seatCapacityInput" type="number" min="1" max="20" required />
+                    </label>
+
+                    <label class="field">
+                      <span>座位状态</span>
+                      <select id="seatStatusInput">
+                        <option value="available">可用</option>
+                        <option value="disabled">停用</option>
+                        <option value="maintenance">维护中</option>
+                      </select>
+                    </label>
+
+                    <label class="field">
+                      <span>安静程度</span>
+                      <select id="seatQuietLevelInput">
+                        <option value="安静">安静</option>
+                        <option value="一般">一般</option>
+                      </select>
+                    </label>
+
+                    <label class="checkbox-field">
+                      <input id="seatHasPowerInput" type="checkbox" />
+                      <span>有插座</span>
+                    </label>
+
+                    <label class="checkbox-field">
+                      <input id="seatNearWindowInput" type="checkbox" />
+                      <span>靠窗</span>
+                    </label>
+
+                    <label class="field">
+                      <span>排序值</span>
+                      <input id="seatSortOrderInput" type="number" step="1" value="0" />
+                    </label>
+
+                    <label class="field field-full">
+                      <span>具体位置说明</span>
+                      <input id="seatSpecificLocationInput" type="text" placeholder="座位位置备注" />
+                    </label>
+
+                    <div class="button-row field-full">
+                      <button class="primary-btn" type="submit">保存座位</button>
+                    </div>
+                  </form>
+                </section>
+              </section>
+
+              <section id="zoneEditorPanel" class="resource-panel hidden">
+                <section class="content-block form-block resource-form-card">
+                  <div class="block-head">
+                    <div>
+                      <h3>分区编辑</h3>
+                      <span>维护分区编号、楼层、状态与说明</span>
+                    </div>
+                    <div class="section-actions">
+                      <button id="resetZoneFormBtn" class="ghost-btn" type="button">新建分区</button>
+                    </div>
+                  </div>
+
+                  <form id="zoneForm" class="form-layout">
+                    <label class="field">
+                      <span>分区编号</span>
+                      <input id="zoneCodeInput" type="text" placeholder="Q3" required />
+                    </label>
+
+                    <label class="field">
+                      <span>分区名称</span>
+                      <input id="zoneDisplayNameInput" type="text" placeholder="北侧 Q3 区" required />
+                    </label>
+
+                    <label class="field">
+                      <span>楼层</span>
+                      <input id="zoneFloorNoInput" type="number" min="1" max="99" value="7" required />
+                    </label>
+
+                    <label class="field">
+                      <span>网格字母</span>
+                      <input id="zoneGridLetterInput" type="text" placeholder="Q" required />
+                    </label>
+
+                    <label class="field">
+                      <span>网格编号</span>
+                      <input id="zoneGridNumberInput" type="number" min="1" max="999" required />
+                    </label>
+
+                    <label class="field">
+                      <span>所属带区</span>
+                      <select id="zoneBandInput">
+                        <option value="north">北侧</option>
+                        <option value="south_outer">南侧外圈</option>
+                        <option value="south_inner">南侧内圈</option>
+                        <option value="east">东侧</option>
+                        <option value="west">西侧</option>
+                        <option value="inner">内侧</option>
+                      </select>
+                    </label>
+
+                    <label class="field">
+                      <span>标注状态</span>
+                      <select id="zoneAnnotationStatusInput">
+                        <option value="pending">待标注</option>
+                        <option value="annotated">已标注</option>
+                        <option value="verified">已校验</option>
+                      </select>
+                    </label>
+
+                    <label class="field">
+                      <span>排序值</span>
+                      <input id="zoneSortOrderInput" type="number" step="1" value="0" />
+                    </label>
+
+                    <label class="checkbox-field">
+                      <input id="zoneIsEnabledInput" type="checkbox" checked />
+                      <span>启用分区</span>
+                    </label>
+
+                    <label class="field field-full">
+                      <span>备注</span>
+                      <textarea id="zoneNotesInput" rows="3" placeholder="管理员备注"></textarea>
+                    </label>
+
+                    <div class="button-row field-full">
+                      <button class="primary-btn" type="submit">保存分区</button>
+                    </div>
+                  </form>
+                </section>
+
+                <section class="content-block resource-list-card">
+                  <div class="block-head">
+                    <div>
+                      <h3>分区列表</h3>
+                      <span>查看当前分区状态并进行启停或编辑</span>
+                    </div>
+                  </div>
+
+                  <div id="zoneList" class="stack-list stack-list--dense"></div>
+                </section>
+              </section>
+            </div>
+          </section>
+
+          <section id="configSection" class="view-panel hidden">
+            <div class="view-scroll">
+              <section class="panel-hero panel-hero--compact">
+                <div class="panel-hero-copy">
+                  <span class="section-kicker">Config</span>
+                  <h3>规则按组折叠，减少一次性暴露的大块表单。</h3>
+                  <p>先看分组摘要，再展开需要修改的部分，保存动作始终固定在顶部区域。</p>
+                </div>
+              </section>
+
+              <div class="section-actions section-actions--sticky">
+                <button id="saveConfigBtn" class="primary-btn" type="button">保存全部规则</button>
+              </div>
+
+              <section class="content-block">
+                <div class="block-head">
+                  <div>
+                    <h3>规则配置</h3>
+                    <span>统一维护预约、签到、暂离与信用策略</span>
+                  </div>
+                </div>
+                <div id="configStatusStrip" class="tag-strip"></div>
+                <div id="configList" class="config-grid"></div>
+                <div class="config-apply-bar">
+                  <div>
+                    <strong>应用当前规则配置</strong>
+                    <span>修改暂离、签到或信用规则后，点击右侧按钮才会写入数据库并同步给小程序端。</span>
+                  </div>
+                  <button id="applyConfigBtn" class="primary-btn" type="button">应用当前配置并保存</button>
+                </div>
+              </section>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="./runtime-config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

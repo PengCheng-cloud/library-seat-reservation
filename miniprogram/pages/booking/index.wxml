@@ -1,0 +1,254 @@
+<view class="page-shell page-shell--detail booking-page">
+  <view class="page-decor">
+    <view class="page-decor__orb page-decor__orb--one"></view>
+    <view class="page-decor__orb page-decor__orb--two"></view>
+    <view class="page-decor__orb page-decor__orb--three"></view>
+  </view>
+
+  <view class="glass-card">
+    <view class="section-head">
+      <view>
+        <text class="section-title">预约确认</text>
+        <text class="section-subtitle">确认时间和座位后提交预约，完整流程会在预约页继续处理。</text>
+      </view>
+      <view class="section-link" bindtap="openSeatPage">重新选座</view>
+    </view>
+    <view class="tag-list">
+      <text class="tag" wx:if="{{seat}}">{{seat.seatId}}</text>
+      <text class="tag">{{reservationDate}}</text>
+      <text class="tag">{{startTime}} - {{endTime}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{seat}}" class="glass-card">
+    <view class="section-head">
+      <view>
+        <text class="section-title">{{seat.seatId}}</text>
+        <text class="section-subtitle">{{seat.zoneDisplayName}} · {{seat.seatType}} · {{seat.tableGroupCode}}</text>
+      </view>
+      <view class="booking-seat-side">
+        <text class="status-badge status-badge--{{seat.statusTone}}">{{seat.statusLabel}}</text>
+        <text wx:if="{{seat.displayScore}}" class="booking-score">{{seat.displayScore}}</text>
+      </view>
+    </view>
+
+    <text class="booking-seat-desc">{{seat.statusDescription}}</text>
+    <text wx:if="{{seat.conflictTimeRange}}" class="booking-warning">冲突时段：{{seat.conflictTimeRange}}</text>
+
+    <view wx:if="{{seat.summaryTags.length}}" class="tag-list booking-tag-gap">
+      <text class="tag" wx:for="{{seat.summaryTags}}" wx:key="*this">{{item}}</text>
+    </view>
+
+    <view class="booking-meta-grid">
+      <view class="booking-meta-card" wx:for="{{seat.metaCards}}" wx:key="label">
+        <text class="booking-meta-label">{{item.label}}</text>
+        <text class="booking-meta-value">{{item.value}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{seat.featurePreviewCards.length}}" class="booking-feature-panel">
+      <view class="booking-feature-head">
+        <view class="booking-feature-copy">
+          <text class="booking-feature-title">座位特征预览</text>
+          <text class="booking-feature-summary">{{seat.featurePreviewSummary}}</text>
+        </view>
+        <view class="booking-feature-toggle" bindtap="toggleSeatFeaturePreview">
+          {{seat.featurePreviewToggleText}}
+        </view>
+      </view>
+
+      <scroll-view
+        wx:if="{{seat.featurePreviewExpanded}}"
+        class="booking-feature-scroll"
+        scroll-x="true"
+        enable-flex="true"
+        show-scrollbar="false"
+      >
+        <view class="booking-feature-row">
+          <view class="booking-feature-card" wx:for="{{seat.featurePreviewCards}}" wx:key="key">
+            <image class="booking-feature-image" src="{{item.image}}" mode="aspectFill"></image>
+            <view class="booking-feature-card-copy">
+              <text class="booking-feature-badge booking-feature-badge--{{item.highlighted ? 'active' : 'default'}}">
+                {{item.displayBadge}}
+              </text>
+              <text class="booking-feature-card-title">{{item.title}}</text>
+              <text class="booking-feature-card-subtitle">{{item.subtitle}}</text>
+              <text wx:if="{{item.detailText}}" class="booking-feature-card-note">{{item.detailText}}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view class="glass-card">
+    <view class="section-head">
+      <view>
+        <text class="section-title">预约时间</text>
+        <text class="section-subtitle">按月历选择日期，再精确到分钟调整预约时段。</text>
+      </view>
+    </view>
+
+    <view class="booking-date-summary">
+      <text class="booking-date-summary-label">当前选择</text>
+      <text class="booking-date-summary-title">{{selectedDateTitle}}</text>
+      <text class="booking-date-summary-note">{{selectedDateNote}}</text>
+      <view class="booking-date-action" bindtap="toggleCalendar">{{calendarExpanded ? '收起日期' : '更换日期'}}</view>
+    </view>
+
+    <view class="booking-timeline-panel">
+      <view class="booking-timeline-head">
+        <view>
+          <text class="booking-timeline-title">座位占用时间轴</text>
+          <text class="booking-timeline-subtitle">{{scheduleSummary}}</text>
+        </view>
+        <text class="booking-timeline-range">{{scheduleRangeText}}</text>
+      </view>
+
+      <view class="booking-timeline-track">
+        <view wx:if="{{selectedTimelineBar}}" class="booking-timeline-selected booking-timeline-selected--{{scheduleConflict ? 'conflict' : 'ok'}}" style="{{selectedTimelineBar.barStyle}}"></view>
+        <view
+          class="booking-timeline-occupied"
+          wx:for="{{occupiedTimelineItems}}"
+          wx:key="reservationNo"
+          style="{{item.barStyle}}"
+        ></view>
+      </view>
+      <view class="booking-timeline-ticks">
+        <text
+          class="booking-timeline-tick booking-timeline-tick--{{item.align}}"
+          wx:for="{{timelineTicks}}"
+          wx:key="key"
+          style="left: {{item.left}}%;"
+        >{{item.label}}</text>
+      </view>
+
+      <view class="booking-timeline-legend">
+        <view class="booking-timeline-legend-item">
+          <view class="booking-timeline-legend-dot booking-timeline-legend-dot--free"></view>
+          <text>空闲</text>
+        </view>
+        <view class="booking-timeline-legend-item">
+          <view class="booking-timeline-legend-dot booking-timeline-legend-dot--selected"></view>
+          <text>已选</text>
+        </view>
+        <view class="booking-timeline-legend-item">
+          <view class="booking-timeline-legend-dot booking-timeline-legend-dot--occupied"></view>
+          <text>占用</text>
+        </view>
+      </view>
+
+      <scroll-view class="booking-slot-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+        <view class="booking-slot-row">
+          <view
+            class="booking-slot booking-slot--{{item.tone}}"
+            wx:for="{{scheduleSlots}}"
+            wx:key="key"
+            data-start-time="{{item.startTime}}"
+            data-end-time="{{item.endTime}}"
+            data-occupied="{{item.occupied}}"
+            bindtap="selectScheduleSlot"
+          >
+            <text class="booking-slot-time">{{item.label}}</text>
+            <text class="booking-slot-status">{{item.statusText}}</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view wx:if="{{occupiedTimelineItems.length}}" class="booking-occupied-list">
+        <view class="booking-occupied-item" wx:for="{{occupiedTimelineItems}}" wx:key="reservationNo">
+          <text class="booking-occupied-time">{{item.timeText}}</text>
+          <text class="booking-occupied-status">{{item.statusText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{calendarExpanded}}" class="booking-calendar">
+      <view class="booking-calendar-month" wx:for="{{calendarMonths}}" wx:key="key">
+        <text class="booking-calendar-month-title">{{item.title}}</text>
+
+        <view class="booking-calendar-weekdays">
+          <text class="booking-calendar-weekday" wx:for="{{calendarWeekdays}}" wx:key="*this">{{item}}</text>
+        </view>
+
+        <view class="booking-calendar-week" wx:for="{{item.weeks}}" wx:key="key" wx:for-item="week">
+          <view
+            class="booking-calendar-cell {{day.empty ? 'booking-calendar-cell--empty' : ''}} {{day.isAvailable ? 'booking-calendar-cell--available' : 'booking-calendar-cell--disabled'}} {{day.selected ? 'booking-calendar-cell--active' : ''}}"
+            wx:for="{{week.days}}"
+            wx:key="key"
+            wx:for-item="day"
+            data-value="{{day.value}}"
+            bindtap="selectDateOption"
+          >
+            <text class="booking-calendar-day">{{day.dayText}}</text>
+            <text wx:if="{{day.helperText}}" class="booking-calendar-hint">{{day.helperText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="booking-time-grid">
+      <view>
+        <text class="field-label">开始时间</text>
+        <view class="input-shell">
+          <input
+            class="input-field booking-time-input"
+            value="{{startTimeInput}}"
+            maxlength="5"
+            placeholder="如 09:00"
+            bindinput="onStartTimeInput"
+            bindblur="onStartTimeBlur"
+            confirm-type="done"
+          />
+        </view>
+      </view>
+
+      <view>
+        <text class="field-label">结束时间</text>
+        <view class="input-shell">
+          <input
+            class="input-field booking-time-input"
+            value="{{endTimeInput}}"
+            maxlength="5"
+            placeholder="如 11:00"
+            bindinput="onEndTimeInput"
+            bindblur="onEndTimeBlur"
+            confirm-type="done"
+          />
+        </view>
+      </view>
+    </view>
+
+    <view class="action-row booking-action-row">
+      <button class="secondary-btn" loading="{{validating}}" disabled="{{submitting}}" bindtap="handlePreviewReservation">
+        先做校验
+      </button>
+      <button class="primary-btn" loading="{{submitting}}" bindtap="handleCreateReservation">
+        提交预约
+      </button>
+    </view>
+  </view>
+
+  <view wx:if="{{validationResult}}" class="glass-card">
+    <text class="section-title">{{validationResult.valid ? '预约校验通过' : '预约校验未通过'}}</text>
+    <text class="section-subtitle">{{validationResult.message}}</text>
+
+    <view class="booking-check-list">
+      <view class="booking-check-card booking-check-card--{{item.tone}}" wx:for="{{validationChecks}}" wx:key="key">
+        <view class="booking-check-head">
+          <text class="booking-check-title">{{item.label}}</text>
+          <text class="booking-check-status">{{item.statusText}}</text>
+        </view>
+        <text wx:if="{{item.detail}}" class="booking-check-detail">{{item.detail}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && !seat}}" class="glass-card">
+    <view class="empty-state">
+      <text class="empty-title">未找到对应座位</text>
+      <text class="empty-desc">这个座位可能已下线或当前条件下不可见，请返回重新选择。</text>
+      <button class="primary-btn booking-empty-btn" bindtap="openSeatPage">返回选座</button>
+    </view>
+  </view>
+</view>

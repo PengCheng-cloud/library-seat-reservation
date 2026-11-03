@@ -1,0 +1,62 @@
+<view class="page-shell preference-page">
+  <view class="preference-hero">
+    <text class="preference-kicker">Filters</text>
+    <text class="preference-title">环境偏好</text>
+    <text class="preference-desc">首页只保留速选入口，全部偏好集中在这里，不再把首页拉成一长页。</text>
+
+    <view class="preference-hero-actions">
+      <button class="preference-hero-btn" bindtap="openSeatSmart">AI 选座</button>
+      <button class="preference-hero-btn preference-hero-btn--ghost" bindtap="openSeatMap">地图选座</button>
+    </view>
+  </view>
+
+  <view class="preference-panel">
+    <view class="preference-panel-head">
+      <view>
+        <text class="section-title">可直接筛选的偏好</text>
+        <text class="section-subtitle">点击卡片后，会带着对应条件直接进入选座页。</text>
+      </view>
+    </view>
+
+    <view class="preference-action-grid">
+      <button
+        class="preference-action-card {{item.toneClass}}"
+        wx:for="{{actionableItems}}"
+        wx:key="key"
+        data-action-type="{{item.actionType}}"
+        data-action-value="{{item.actionValue}}"
+        bindtap="openFeatureAction"
+      >
+        <text class="preference-action-label">{{item.badge}}</text>
+        <text class="preference-action-title">{{item.title}}</text>
+        <text class="preference-action-subtitle">{{item.subtitle}}</text>
+        <view class="tag-list preference-action-tags">
+          <text class="preference-action-tag" wx:for="{{item.displayTags}}" wx:for-item="featureTag" wx:key="*this">{{featureTag}}</text>
+        </view>
+        <text class="preference-action-link">{{item.actionLabel}}</text>
+      </button>
+    </view>
+  </view>
+
+  <view wx:if="{{facilityItems.length}}" class="preference-panel">
+    <view class="preference-panel-head">
+      <view>
+        <text class="section-title">设施与环境说明</text>
+        <text class="section-subtitle">这些内容主要帮助理解馆内条件，不会直接触发筛选。</text>
+      </view>
+    </view>
+
+    <view class="preference-facility-grid">
+      <view class="preference-facility-item" wx:for="{{facilityItems}}" wx:key="key">
+        <image class="preference-facility-image" src="{{item.image}}" mode="aspectFill" lazy-load="true"></image>
+        <view class="preference-facility-body">
+          <text class="preference-facility-title">{{item.title}}</text>
+          <text class="preference-facility-subtitle">{{item.subtitle}}</text>
+          <view class="tag-list">
+            <text class="tag" wx:for="{{item.tags}}" wx:for-item="facilityTag" wx:key="*this">{{facilityTag}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

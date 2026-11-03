@@ -1,0 +1,72 @@
+<view class="page-shell showcase-page">
+  <view class="page-decor">
+    <view class="page-decor__orb page-decor__orb--one"></view>
+    <view class="page-decor__orb page-decor__orb--two"></view>
+    <view class="page-decor__orb page-decor__orb--three"></view>
+  </view>
+
+  <view class="glass-card showcase-hero-card">
+    <text class="section-title">{{collectionTitle}}</text>
+    <text class="section-subtitle">{{collectionSubtitle}}</text>
+    <view class="tag-list showcase-hero-tags">
+      <text class="tag">{{itemCount}} 个主题</text>
+      <text class="tag">{{type === 'scene' ? '按学习场景浏览' : '按区域空间浏览'}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{items.length}}" class="showcase-list">
+    <view
+      class="glass-card showcase-card"
+      wx:for="{{items}}"
+      wx:key="key"
+      data-key="{{item.key}}"
+      bindtap="openDetail"
+      hover-class="tap-scale"
+      hover-stay-time="70"
+    >
+      <image class="showcase-card-image" src="{{item.image}}" mode="aspectFill"></image>
+      <view class="showcase-card-body">
+        <view class="showcase-card-head">
+          <view>
+            <text class="showcase-card-title">{{item.title}}</text>
+            <text class="showcase-card-subtitle">{{item.subtitle}}</text>
+          </view>
+          <text class="showcase-card-arrow">详情</text>
+        </view>
+        <text class="showcase-card-summary">{{item.summary}}</text>
+        <view class="tag-list">
+          <text class="tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+        </view>
+        <text class="showcase-card-gallery">{{item.galleryCount}} 张图片说明</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{supplementalItems.length}}" class="glass-card showcase-supplement-card">
+    <view class="section-head">
+      <view>
+        <text class="section-title">{{supplementalTitle}}</text>
+        <text class="section-subtitle">{{supplementalSubtitle}}</text>
+      </view>
+    </view>
+
+    <view class="showcase-supplement-grid">
+      <view class="showcase-supplement-item" wx:for="{{supplementalItems}}" wx:key="key">
+        <image class="showcase-supplement-image" src="{{item.image}}" mode="aspectFill"></image>
+        <view class="showcase-supplement-body">
+          <text class="showcase-supplement-title">{{item.title}}</text>
+          <text class="showcase-supplement-subtitle">{{item.subtitle}}</text>
+          <text class="showcase-supplement-summary">{{item.summary}}</text>
+          <view class="tag-list showcase-supplement-tags">
+            <text class="tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!items.length}}" class="glass-card empty-state">
+    <text class="empty-title">暂时还没有展示内容</text>
+    <text class="empty-desc">后续补充图片后，这里会自动显示最新图集。</text>
+  </view>
+</view>

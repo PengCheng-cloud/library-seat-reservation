@@ -1,0 +1,190 @@
+<view class="page-shell page-shell--detail zone-page">
+  <view class="page-decor">
+    <view class="page-decor__orb page-decor__orb--one"></view>
+    <view class="page-decor__orb page-decor__orb--two"></view>
+    <view class="page-decor__orb page-decor__orb--three"></view>
+  </view>
+
+  <view class="hero-card zone-hero">
+    <view class="zone-hero-head">
+      <view class="zone-hero-copy">
+        <text class="zone-kicker">Zone View</text>
+        <text class="hero-title">{{zone ? zone.displayName : zoneCode}}</text>
+        <text class="hero-subtitle">把当前时段内这一个分区单独展开。先看本区推荐，再在桌组里点到具体座位完成预约。</text>
+      </view>
+      <view class="zone-hero-actions">
+        <view class="section-link zone-hero-link" bindtap="backToMap">返回地图</view>
+        <button class="secondary-btn zone-hero-btn" disabled="{{!recommendedSeats.length}}" bindtap="useTopRecommendation">预约首推</button>
+      </view>
+    </view>
+
+    <view class="zone-hero-stats">
+      <view class="zone-hero-stat">
+        <text class="zone-hero-stat-label">分区代码</text>
+        <text class="zone-hero-stat-value">{{zoneCode}}</text>
+      </view>
+      <view class="zone-hero-stat">
+        <text class="zone-hero-stat-label">桌组数量</text>
+        <text class="zone-hero-stat-value">{{zone ? zone.tableGroupCount : 0}}</text>
+      </view>
+      <view class="zone-hero-stat">
+        <text class="zone-hero-stat-label">当前可约</text>
+        <text class="zone-hero-stat-value">{{zone ? (zone.matchedSeatCount || 0) : 0}}</text>
+      </view>
+      <view class="zone-hero-stat">
+        <text class="zone-hero-stat-label">推荐座位</text>
+        <text class="zone-hero-stat-value">{{recommendedSeats.length}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="glass-card zone-summary-surface">
+    <view class="section-head">
+      <view>
+        <text class="section-title">{{recommendationSummary ? recommendationSummary.title : '本区推荐'}}</text>
+        <text class="section-subtitle">{{recommendationSummary ? recommendationSummary.description : '当前分区会优先展示适合直接预约的候选座位。'}}</text>
+      </view>
+      <text wx:if="{{recommendationSummary}}" class="badge badge--soft">{{recommendationSummary.badge}}</text>
+    </view>
+
+    <view class="tag-list zone-summary-tags">
+      <text class="tag">{{reservationDate}}</text>
+      <text class="tag">{{startTime}} - {{endTime}}</text>
+      <text wx:if="{{zone}}" class="tag">{{zone.seatCount}} 个座位</text>
+      <text wx:if="{{zone}}" class="tag">{{zone.tableGroupCount}} 个桌组</text>
+    </view>
+
+    <view wx:if="{{!assistantMapMode && activeFilterLabels.length}}" class="tag-list zone-summary-tags">
+      <text class="tag" wx:for="{{activeFilterLabels}}" wx:key="*this">{{item}}</text>
+    </view>
+
+    <view wx:if="{{recommendedSeats.length}}" class="zone-line-list">
+      <view
+        class="zone-line-row"
+        wx:for="{{recommendedSeats}}"
+        wx:key="seatId"
+        data-seat-id="{{item.seatId}}"
+        bindtap="selectSeat"
+        hover-class="tap-scale"
+        hover-stay-time="70"
+      >
+        <view class="zone-line-main">
+          <view class="zone-line-head">
+            <view>
+              <text class="zone-line-title">{{item.seatId}}</text>
+              <text class="zone-line-meta">{{item.zoneDisplayName}} · {{item.seatType}} · {{item.tableGroupCode}}</text>
+            </view>
+            <view class="zone-line-side">
+              <text class="status-badge status-badge--{{item.statusTone}}">{{item.statusLabel}}</text>
+              <text class="zone-line-score">{{item.displayScore}}</text>
+            </view>
+          </view>
+
+          <view class="tag-list">
+            <text class="tag" wx:for="{{item.reasons}}" wx:key="*this">{{item}}</text>
+          </view>
+
+          <view wx:if="{{!assistantMapMode && item.featurePreviewCards.length}}" class="zone-feature-panel" catchtap="noop">
+            <view class="zone-feature-head">
+              <view class="zone-feature-copy">
+                <text class="zone-feature-title">环境预览</text>
+                <text class="zone-feature-summary">{{item.featurePreviewSummary}}</text>
+              </view>
+              <view class="zone-feature-toggle" data-seat-id="{{item.seatId}}" catchtap="toggleSeatFeaturePreview">
+                {{item.featurePreviewToggleText}}
+              </view>
+            </view>
+
+            <scroll-view
+              wx:if="{{item.featurePreviewExpanded}}"
+              class="zone-feature-scroll"
+              scroll-x="true"
+              enable-flex="true"
+              show-scrollbar="false"
+            >
+              <view class="zone-feature-row">
+                <view class="zone-feature-card" wx:for="{{item.featurePreviewCards}}" wx:key="key">
+                  <image class="zone-feature-image" src="{{item.image}}" mode="aspectFill"></image>
+                  <view class="zone-feature-card-copy">
+                    <text class="zone-feature-badge zone-feature-badge--{{item.highlighted ? 'active' : 'default'}}">{{item.displayBadge}}</text>
+                    <text class="zone-feature-card-title">{{item.title}}</text>
+                    <text class="zone-feature-card-subtitle">{{item.subtitle}}</text>
+                    <text wx:if="{{item.detailText}}" class="zone-feature-card-note">{{item.detailText}}</text>
+                  </view>
+                </view>
+              </view>
+            </scroll-view>
+          </view>
+
+          <text wx:if="{{item.sceneModelText}}" class="zone-seat-model">{{item.sceneModelText}} {{item.sceneModelMetaText}}</text>
+        </view>
+        <text class="zone-list-arrow">预约</text>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <text class="empty-title">当前分区没有直接推荐结果</text>
+      <text class="empty-desc">{{assistantMapMode ? '可以返回推荐地图切换其他高亮分区，或回到 AI 助手重新生成推荐。' : '可以返回地图切换时段或筛选项，再重新进入本区比较。'}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{tableGroups.length}}" class="glass-card zone-workbench">
+    <view class="section-head">
+      <view>
+        <text class="section-title">桌组工作台</text>
+        <text class="section-subtitle">先切换桌组，再点具体座位进入预约确认，整个流程只保留一个视觉工作区。</text>
+      </view>
+      <text wx:if="{{activeTableGroupDetail}}" class="badge badge--soft">{{activeTableGroupDetail.groupLabel}}</text>
+    </view>
+
+    <scroll-view class="zone-group-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+      <view class="zone-group-row">
+        <view
+          wx:for="{{tableGroups}}"
+          wx:key="tableGroupCode"
+          class="zone-group-chip {{item.isActive ? 'zone-group-chip--active' : ''}}"
+          data-table-group-code="{{item.tableGroupCode}}"
+          bindtap="selectTableGroup"
+          hover-class="tap-scale"
+          hover-stay-time="70"
+        >
+          <text class="zone-group-chip-title">{{item.groupLabel}}</text>
+          <text class="zone-group-chip-meta">{{item.availableCount}} / {{item.seatCount}} 可约</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view wx:if="{{activeTableGroupDetail}}" class="zone-table-stage">
+      <view class="zone-table-head">
+        <view>
+          <text class="zone-table-title">{{activeTableGroupDetail.groupLabel}} 桌组</text>
+          <text class="zone-table-subtitle">{{activeTableGroupDetail.zoneDisplayName}} · {{activeTableGroupDetail.seatType}}</text>
+        </view>
+        <text class="badge badge--soft">{{activeTableGroupDetail.availableCount}} / {{activeTableGroupDetail.seatCount}} 可约</text>
+      </view>
+
+      <scroll-view class="zone-seat-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+        <view
+          class="zone-seat-grid zone-seat-grid--inline"
+          style="{{activeTableGroupDetail.visualGridStyle}}"
+        >
+          <view
+            wx:for="{{activeTableGroupDetail.visualSeats}}"
+            wx:key="seatId"
+            wx:for-item="seat"
+            class="zone-visual-seat zone-visual-seat--{{seat.statusTone}} {{seat.isRecommended ? 'zone-visual-seat--recommended' : ''}} {{seat.isSelected ? 'zone-visual-seat--selected' : ''}} {{seat.isNearWindow ? 'zone-visual-seat--window' : ''}}"
+            data-seat-id="{{seat.seatId}}"
+            bindtap="selectSeat"
+            hover-class="tap-scale"
+            hover-stay-time="70"
+          >
+            <text wx:if="{{seat.windowBadge}}" class="zone-visual-seat-window">{{seat.windowBadge}}</text>
+            <text class="zone-visual-seat-index">{{seat.visualLabel}}</text>
+            <text class="zone-visual-seat-id">{{seat.seatId}}</text>
+            <text class="zone-visual-seat-state">{{seat.visualHint}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

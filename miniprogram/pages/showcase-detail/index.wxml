@@ -1,0 +1,72 @@
+<view wx:if="{{item}}" class="page-shell showcase-detail-page">
+  <view class="page-decor">
+    <view class="page-decor__orb page-decor__orb--one"></view>
+    <view class="page-decor__orb page-decor__orb--two"></view>
+    <view class="page-decor__orb page-decor__orb--three"></view>
+  </view>
+
+  <view class="glass-card showcase-detail-hero">
+    <image class="showcase-detail-image" src="{{item.image}}" mode="aspectFill"></image>
+    <view class="showcase-detail-mask"></view>
+    <view class="showcase-detail-copy">
+      <view class="tag-list">
+        <text class="tag tag--light">{{type === 'scene' ? '常用场景' : '空间导览'}}</text>
+        <text class="tag tag--light">{{item.imageTag}}</text>
+      </view>
+      <text class="showcase-detail-title">{{item.title}}</text>
+      <text class="showcase-detail-subtitle">{{item.subtitle}}</text>
+    </view>
+  </view>
+
+  <view class="glass-card">
+    <view class="section-head">
+      <view>
+        <text class="section-title">图像说明</text>
+        <text class="section-subtitle">这一页会把空间图片、环境特征和座位推荐入口串起来。</text>
+      </view>
+    </view>
+
+    <text class="showcase-detail-summary">{{item.summary}}</text>
+    <view class="tag-list showcase-detail-tags">
+      <text class="tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+    </view>
+
+    <view wx:if="{{featurePoints.length}}" class="showcase-point-list">
+      <view class="showcase-point-row" wx:for="{{featurePoints}}" wx:key="*this">
+        <text class="showcase-point-dot"></text>
+        <text class="showcase-point-text">{{item}}</text>
+      </view>
+    </view>
+
+    <button wx:if="{{hasAction}}" class="primary-btn showcase-detail-btn" bindtap="openAction">{{actionLabel}}</button>
+  </view>
+
+  <view class="glass-card">
+    <view class="section-head">
+      <view>
+        <text class="section-title">更多图片与解释</text>
+        <text class="section-subtitle">{{typeLabel}}会随着你继续补拍云端图片自动扩展。</text>
+      </view>
+    </view>
+
+    <view wx:if="{{gallery.length}}" class="showcase-gallery">
+      <view class="showcase-gallery-card" wx:for="{{gallery}}" wx:key="key">
+        <image class="showcase-gallery-image" src="{{item.image}}" mode="aspectFill"></image>
+        <view class="showcase-gallery-body">
+          <view class="showcase-gallery-head">
+            <text class="showcase-gallery-title">{{item.title}}</text>
+            <view class="tag-list">
+              <text class="tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+            </view>
+          </view>
+          <text class="showcase-gallery-desc">{{item.description}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <text class="empty-title">暂时还没有更多图片</text>
+      <text class="empty-desc">继续补充云端图片后，这里会自动展示新的示意图和解释。</text>
+    </view>
+  </view>
+</view>

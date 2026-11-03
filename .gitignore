@@ -1,0 +1,45 @@
+# Windows
+[Dd]esktop.ini
+Thumbs.db
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+
+# Node.js
+node_modules/
+
+# Remote-hosted media
+miniprogram/assets/library-gallery/
+server/uploads/
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Local logs
+server-start.log
+server-start.err.log
+
+# Generated experiment outputs
+data/classification_experiment_results/
+data/table_group_scene_experiment_results/
+data/桌组场景分类实验结果/
+data/座位推荐示例结果/
+
+# Generated local datasets and duplicate static assets
+data/level-7-floor-plan.jpg
+data/seat_classification_dataset.xlsx
+data/seat_classification_dataset_cn.xlsx
+data/seat_scene_dataset_group_annotated_cn.xlsx
+data/table_group_scene_annotation.xlsx
+data/座位推荐评分数据集.xlsx
+data/毕设数据集.xlsx
+
+# Local environment
+.env
+server/.env

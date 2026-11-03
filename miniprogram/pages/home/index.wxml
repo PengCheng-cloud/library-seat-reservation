@@ -1,0 +1,161 @@
+<view class="page-shell home-page">
+  <view class="home-hero">
+    <image class="home-hero-image" src="{{heroImage}}" mode="aspectFill" lazy-load="true"></image>
+    <view class="home-hero-mask"></view>
+
+    <view class="home-hero-content">
+      <view class="home-hero-top">
+        <view class="home-user-chip">
+          <view class="home-avatar">{{currentUserInitial}}</view>
+          <view class="home-user-copy">
+            <text class="home-greeting">{{greetingText}}，{{currentUserDisplayName}}</text>
+            <text class="home-user-desc">{{systemName}}</text>
+          </view>
+        </view>
+        <view class="section-link home-profile-link" bindtap="openProfile">个人中心</view>
+      </view>
+
+      <view class="home-hero-main">
+        <view class="tag-list home-hero-tags">
+          <text class="tag tag--light">{{heroBadge}}</text>
+          <text class="tag tag--light">{{heroSceneTitle}}</text>
+        </view>
+        <text class="home-hero-title">图书馆选座</text>
+        <text class="home-hero-desc">{{heroDescription}}</text>
+      </view>
+
+      <view class="home-hero-metrics">
+        <view class="home-hero-metric" wx:for="{{heroMetrics}}" wx:key="label">
+          <text class="home-hero-metric-value">{{item.value}}</text>
+          <text class="home-hero-metric-label">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="home-shortcut-row">
+    <view class="home-shortcut" data-type="scene" bindtap="openShowcaseCollection">
+      <view class="home-shortcut-icon home-shortcut-icon--green">景</view>
+      <text class="home-shortcut-label">场景图集</text>
+    </view>
+    <view class="home-shortcut" data-type="space" bindtap="openShowcaseCollection">
+      <view class="home-shortcut-icon home-shortcut-icon--cyan">区</view>
+      <text class="home-shortcut-label">空间导览</text>
+    </view>
+    <view class="home-shortcut" bindtap="openPreferencesPage">
+      <view class="home-shortcut-icon home-shortcut-icon--mint">偏</view>
+      <text class="home-shortcut-label">环境偏好</text>
+    </view>
+    <view class="home-shortcut" bindtap="openReservations">
+      <view class="home-shortcut-icon home-shortcut-icon--lime">约</view>
+      <text class="home-shortcut-label">我的预约</text>
+    </view>
+    <view class="home-shortcut" bindtap="openSeatMap">
+      <view class="home-shortcut-icon home-shortcut-icon--dark">图</view>
+      <text class="home-shortcut-label">座位地图</text>
+    </view>
+  </view>
+
+  <view class="home-stage-grid">
+    <button class="home-stage-card home-stage-card--primary" bindtap="openSeatMap">
+      <text class="home-stage-title">座位预约</text>
+      <text class="home-stage-desc">进入地图，直接看空位和分区。</text>
+      <text class="home-stage-action">马上预约</text>
+    </button>
+
+    <button class="home-stage-card home-stage-card--aqua" bindtap="openSeatSmart">
+      <text class="home-stage-title">AI 选座</text>
+      <text class="home-stage-desc">输入偏好，系统直接推荐。</text>
+      <text class="home-stage-action">开始筛选</text>
+    </button>
+
+    <button class="home-stage-card home-stage-card--mint" data-type="space" bindtap="openShowcaseCollection">
+      <text class="home-stage-title">空间图集</text>
+      <text class="home-stage-desc">先看实景，再决定怎么选。</text>
+      <text class="home-stage-action">查看更多</text>
+    </button>
+  </view>
+
+  <view wx:if="{{topNotice}}" class="home-notice-banner" bindtap="openNotices">
+    <view class="home-notice-banner-dot"></view>
+    <view class="home-notice-banner-copy">
+      <text class="home-notice-banner-title">{{topNotice.title}}</text>
+      <text class="home-notice-banner-desc">{{topNotice.summary}}</text>
+    </view>
+    <view class="home-notice-banner-side">
+      <text class="home-notice-banner-type">{{topNotice.typeLabel}}</text>
+      <text class="home-notice-banner-link">全部公告</text>
+    </view>
+  </view>
+
+  <view class="home-panel home-panel--compact">
+    <view class="home-panel-head">
+      <view>
+        <text class="home-panel-title">偏好速选</text>
+        <text class="home-panel-desc">首页不再整段展开，常用偏好直接点，更多条件进详情页。</text>
+      </view>
+      <view class="section-link" bindtap="openPreferencesPage">全部偏好</view>
+    </view>
+
+    <scroll-view wx:if="{{featureQuickActions.length}}" class="home-filter-strip" scroll-x="true" show-scrollbar="false">
+      <view class="home-filter-track">
+        <button
+          class="home-filter-chip {{item.toneClass}}"
+          wx:for="{{featureQuickActions}}"
+          wx:key="key"
+          data-action-type="{{item.actionType}}"
+          data-action-value="{{item.actionValue}}"
+          bindtap="openShowcaseAction"
+        >
+          <text class="home-filter-chip-label">{{item.badge}}</text>
+          <text class="home-filter-title">{{item.title}}</text>
+          <text class="home-filter-subtitle">{{item.subtitle}}</text>
+          <view class="tag-list home-filter-tags">
+            <text class="home-filter-tag" wx:for="{{item.displayTags}}" wx:for-item="featureTag" wx:key="*this">{{featureTag}}</text>
+          </view>
+          <text class="home-filter-action">{{item.actionLabel}}</text>
+        </button>
+
+        <button class="home-filter-chip home-filter-chip--more" bindtap="openPreferencesPage">
+          <text class="home-filter-chip-label">More</text>
+          <text class="home-filter-title">更多偏好</text>
+          <text class="home-filter-subtitle">把环境条件、设施说明和筛选入口都收在这里。</text>
+          <text class="home-filter-action">进入偏好页</text>
+        </button>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="home-panel home-panel--compact">
+    <view class="home-panel-head">
+      <view>
+        <text class="home-panel-title">热门分区</text>
+        <text class="home-panel-desc">首页只放最常用入口，其余分区直接去地图看全局。</text>
+      </view>
+      <view class="section-link" bindtap="openSeatMap">分区地图</view>
+    </view>
+
+    <view wx:if="{{hotZones.length}}" class="home-zone-grid">
+      <button
+        class="home-zone-tile {{item.toneClass}}"
+        wx:for="{{hotZones}}"
+        wx:key="zoneCode"
+        data-zone-code="{{item.zoneCode}}"
+        bindtap="openZoneSeatPage"
+      >
+        <text class="home-zone-code">{{item.zoneCode}}</text>
+        <text class="home-zone-name">{{item.displayName}}</text>
+        <text class="home-zone-note">{{item.bandLabel}}</text>
+        <text class="home-zone-meta">{{item.highlightText}}</text>
+        <text class="home-zone-link">{{item.badgeText}}</text>
+      </button>
+    </view>
+
+    <view wx:else class="empty-state home-empty-state">
+      <text class="empty-title">暂未加载到分区信息</text>
+      <text class="empty-desc">请稍后重试，或直接进入地图页查看全部座位。</text>
+    </view>
+
+    <button class="home-zone-entry" bindtap="openSeatMap">查看全部分区与空位</button>
+  </view>
+</view>

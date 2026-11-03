@@ -1,0 +1,58 @@
+{
+  "entryPagePath": "pages/auth/index",
+  "pages": [
+    "pages/auth/index",
+    "pages/home/index",
+    "pages/notices/index",
+    "pages/preferences/index",
+    "pages/seat/index",
+    "pages/showcase/index",
+    "pages/showcase-detail/index",
+    "pages/assistant-results/index",
+    "pages/zone/index",
+    "pages/booking/index",
+    "pages/reservation/index",
+    "pages/profile/index"
+  ],
+  "subpackages": [],
+  "window": {
+    "navigationBarTitleText": "图书馆座位预约系统",
+    "navigationBarBackgroundColor": "#fcfffb",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f4faf2",
+    "backgroundTextStyle": "dark"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于到馆后完成定位签到"
+    }
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#76897c",
+    "selectedColor": "#3f8c4c",
+    "backgroundColor": "#fcfffb",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/seat/index",
+        "text": "选座"
+      },
+      {
+        "pagePath": "pages/reservation/index",
+        "text": "预约"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

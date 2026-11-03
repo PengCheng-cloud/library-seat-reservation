@@ -1,0 +1,98 @@
+<view class="page-shell reservation-page">
+  <view class="reservation-hero">
+    <view class="reservation-hero-head">
+      <view class="reservation-header-copy">
+        <text class="reservation-eyebrow">Reservation</text>
+        <text class="reservation-title">我的预约</text>
+        <text class="reservation-desc">签到、签退和历史都在这里，先看状态，再做动作。</text>
+      </view>
+      <button class="secondary-btn reservation-header-btn" bindtap="openSeatPage">去选座</button>
+    </view>
+
+    <view class="reservation-summary-strip">
+      <view class="reservation-summary-item" wx:for="{{summaryCards}}" wx:key="label">
+        <text class="reservation-summary-value">{{item.value}}</text>
+        <text class="reservation-summary-label">{{item.label}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="reservation-sheet">
+    <view class="reservation-process-row">
+      <view class="reservation-process-chip">预约</view>
+      <view class="reservation-process-divider"></view>
+      <view class="reservation-process-chip">签到</view>
+      <view class="reservation-process-divider"></view>
+      <view class="reservation-process-chip">签退</view>
+    </view>
+
+    <view class="reservation-divider"></view>
+
+    <view class="reservation-section">
+      <view class="reservation-section-head">
+        <view>
+          <text class="section-title">当前预约</text>
+          <text class="section-subtitle">只保留你现在要处理的预约。</text>
+        </view>
+        <text class="badge badge--soft">{{current.length}} 条</text>
+      </view>
+
+      <view wx:if="{{!current.length}}" class="empty-state reservation-empty">
+        <text class="empty-title">当前没有进行中的预约</text>
+        <text class="empty-desc">去选座后，新的预约会直接出现在这里。</text>
+        <button class="primary-btn reservation-empty-btn" bindtap="openSeatPage">立即选座</button>
+      </view>
+
+      <view wx:else class="reservation-list">
+        <view class="reservation-row" wx:for="{{current}}" wx:key="reservationNo">
+          <view class="reservation-row-head">
+            <view class="reservation-item-main">
+              <text class="reservation-item-title">{{item.seatId}}</text>
+              <text class="reservation-item-meta">{{item.zoneDisplayName}} · {{item.reservationDate}} {{item.startTime}}-{{item.endTime}}</text>
+            </view>
+            <text class="status-badge status-badge--{{item.statusTone}}">{{item.statusText}}</text>
+          </view>
+
+          <text wx:if="{{item.statusHint}}" class="reservation-item-hint">{{item.statusHint}}</text>
+
+          <view class="reservation-action-row">
+            <button wx:if="{{item.canCheckin}}" class="primary-btn reservation-mini-btn" data-reservation-no="{{item.reservationNo}}" bindtap="handleCheckin">定位签到</button>
+            <button wx:if="{{item.canStartLeave}}" class="secondary-btn reservation-mini-btn" data-reservation-no="{{item.reservationNo}}" bindtap="handleStartLeave">暂离</button>
+            <button wx:if="{{item.canReturnLeave}}" class="primary-btn reservation-mini-btn" data-reservation-no="{{item.reservationNo}}" bindtap="handleReturnLeave">返座</button>
+            <button wx:if="{{item.canCheckout}}" class="primary-btn reservation-mini-btn" data-reservation-no="{{item.reservationNo}}" bindtap="handleCheckout">直接签退</button>
+            <button wx:if="{{item.canCancel}}" class="plain-btn reservation-mini-btn reservation-mini-btn--plain" data-reservation-no="{{item.reservationNo}}" bindtap="cancelReservation">取消预约</button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="reservation-divider"></view>
+
+    <view class="reservation-section">
+      <view class="reservation-section-head">
+        <view>
+          <text class="section-title">历史记录</text>
+          <text class="section-subtitle">只看结果和时段，不再堆解释文字。</text>
+        </view>
+        <text class="badge badge--soft">{{history.length}} 条</text>
+      </view>
+
+      <view wx:if="{{!history.length}}" class="empty-state reservation-empty">
+        <text class="empty-title">还没有历史记录</text>
+        <text class="empty-desc">完成一次预约后，这里会自动留存记录。</text>
+      </view>
+
+      <view wx:else class="reservation-history-list">
+        <view class="reservation-history-row" wx:for="{{history}}" wx:key="reservationNo">
+          <view class="reservation-row-head">
+            <view class="reservation-item-main">
+              <text class="reservation-item-title">{{item.seatId}}</text>
+              <text class="reservation-item-meta">{{item.zoneDisplayName}} · {{item.reservationDate}} {{item.startTime}}-{{item.endTime}}</text>
+            </view>
+            <text class="status-badge status-badge--{{item.statusTone}}">{{item.statusText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

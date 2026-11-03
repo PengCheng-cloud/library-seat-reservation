@@ -1,0 +1,22 @@
+<view class="tab-shell">
+  <view class="tab-bar">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="route"
+      class="tab-item {{selected === item.route ? 'tab-item--active' : ''}}"
+      data-route="{{item.route}}"
+      data-url="{{item.url}}"
+      bindtap="handleTabTap"
+      hover-class="tab-item--pressed"
+      hover-stay-time="70"
+    >
+      <view class="tab-icon-wrap">
+        <view class="tab-icon-box">
+          <text class="tab-icon-text">{{item.iconText}}</text>
+        </view>
+      </view>
+      <text class="tab-label">{{item.label}}</text>
+    </view>
+  </view>
+  <view class="tab-safe-area"></view>
+</view>

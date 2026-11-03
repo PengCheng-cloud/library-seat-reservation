@@ -1,0 +1,29 @@
+{
+  "seatCount": 1772,
+  "zoneCount": 54,
+  "tableGroupCount": 291,
+  "seatTypeDistribution": {
+    "8人桌": 1216,
+    "4人桌": 556
+  },
+  "hasPowerDistribution": {
+    "true": 1380,
+    "false": 392
+  },
+  "windowDistribution": {
+    "true": 484,
+    "false": 1288
+  },
+  "quietDistribution": {
+    "安静": 1556,
+    "一般": 216
+  },
+  "bandDistribution": {
+    "north": 548,
+    "west": 308,
+    "east": 308,
+    "south_inner": 216,
+    "south_outer": 392
+  },
+  "rawTagPatternCount": 40
+}

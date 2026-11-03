@@ -1,0 +1,156 @@
+<view class="page-shell page-shell--detail auth-page">
+  <view class="auth-brand">
+    <view class="auth-logo">座</view>
+    <text class="auth-title">图书馆座位预约系统</text>
+    <text class="auth-subtitle">当前版本使用“学号 + 姓名”完成简易登录，注册成功后会自动进入系统。</text>
+    <view class="tag-list auth-tags">
+      <text class="tag">学号登录</text>
+      <text class="tag">定位签到</text>
+      <text class="tag">直接签退</text>
+    </view>
+  </view>
+
+  <view class="glass-card auth-card">
+    <view class="auth-notice">
+      <text class="auth-notice-title">使用说明</text>
+      <text class="auth-notice-desc">新用户先注册，注册成功后会自动写入登录态并跳转首页；已注册用户可直接登录。</text>
+    </view>
+
+    <view class="auth-tab-row">
+      <view
+        class="auth-tab {{activeTab === 'login' ? 'auth-tab--active' : ''}}"
+        data-tab="login"
+        bindtap="switchTab"
+      >
+        登录
+      </view>
+      <view
+        class="auth-tab {{activeTab === 'register' ? 'auth-tab--active' : ''}}"
+        data-tab="register"
+        bindtap="switchTab"
+      >
+        注册
+      </view>
+    </view>
+
+    <view wx:if="{{feedbackMessage}}" class="auth-feedback auth-feedback--{{feedbackType}}">
+      <text>{{feedbackMessage}}</text>
+    </view>
+
+    <view wx:if="{{activeTab === 'login'}}" class="auth-form">
+      <text class="section-title">账号登录</text>
+      <text class="section-subtitle">请输入 10 位学号和姓名。</text>
+
+      <view class="auth-field">
+        <text class="field-label">学号</text>
+        <view class="input-shell">
+          <input
+            class="input-field"
+            type="number"
+            maxlength="10"
+            value="{{loginForm.studentNo}}"
+            placeholder="请输入 10 位学号"
+            data-form-key="loginForm"
+            data-field="studentNo"
+            bindinput="handleInput"
+          />
+        </view>
+      </view>
+
+      <view class="auth-field">
+        <text class="field-label">姓名</text>
+        <view class="input-shell">
+          <input
+            class="input-field"
+            value="{{loginForm.realName}}"
+            placeholder="请输入姓名"
+            data-form-key="loginForm"
+            data-field="realName"
+            bindinput="handleInput"
+            bindconfirm="submitLogin"
+            confirm-type="done"
+          />
+        </view>
+      </view>
+
+      <view class="auth-field">
+        <text class="field-label">密码</text>
+        <view class="input-shell">
+          <input
+            class="input-field"
+            password="{{true}}"
+            value="{{loginForm.password}}"
+            placeholder="请输入密码"
+            data-form-key="loginForm"
+            data-field="password"
+            bindinput="handleInput"
+            bindconfirm="submitLogin"
+            confirm-type="done"
+          />
+        </view>
+      </view>
+
+      <button class="primary-btn auth-submit" loading="{{loading}}" bindtap="submitLogin">
+        {{loading ? '登录中...' : '登录并进入首页'}}
+      </button>
+    </view>
+
+    <view wx:else class="auth-form">
+      <text class="section-title">新用户注册</text>
+      <text class="section-subtitle">首次使用时注册即可，注册成功后会自动跳转。</text>
+
+      <view class="auth-field">
+        <text class="field-label">学号</text>
+        <view class="input-shell">
+          <input
+            class="input-field"
+            type="number"
+            maxlength="10"
+            value="{{registerForm.studentNo}}"
+            placeholder="请输入 10 位学号"
+            data-form-key="registerForm"
+            data-field="studentNo"
+            bindinput="handleInput"
+          />
+        </view>
+      </view>
+
+      <view class="auth-field">
+        <text class="field-label">姓名</text>
+        <view class="input-shell">
+          <input
+            class="input-field"
+            value="{{registerForm.realName}}"
+            placeholder="请输入姓名"
+            data-form-key="registerForm"
+            data-field="realName"
+            bindinput="handleInput"
+            bindconfirm="submitRegister"
+            confirm-type="done"
+          />
+        </view>
+      </view>
+
+      <view class="auth-field">
+        <text class="field-label">密码</text>
+        <view class="input-shell">
+          <input
+            class="input-field"
+            password="{{true}}"
+            value="{{registerForm.password}}"
+            placeholder="至少 8 位"
+            data-form-key="registerForm"
+            data-field="password"
+            bindinput="handleInput"
+            bindconfirm="submitRegister"
+            confirm-type="done"
+          />
+        </view>
+      </view>
+
+      <button class="primary-btn auth-submit" loading="{{loading}}" bindtap="submitRegister">
+        {{loading ? '注册中...' : '注册并进入系统'}}
+      </button>
+    </view>
+  </view>
+</view>

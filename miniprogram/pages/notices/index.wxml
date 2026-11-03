@@ -1,0 +1,38 @@
+<view class="page-shell page-shell--detail notices-page">
+  <view class="notices-hero">
+    <text class="notices-eyebrow">Notice Center</text>
+    <text class="notices-title">公告中心</text>
+    <text class="notices-desc">后台发布的开放安排、规则调整和维护通知会同步到读者端，读者可以在预约前查看当前图书馆服务状态。</text>
+  </view>
+
+  <view class="notices-sheet">
+    <view class="notices-head">
+      <view>
+        <text class="notices-section-title">当前公告</text>
+        <text class="notices-section-desc">按发布时间倒序展示，优先查看最新规则与服务提醒。</text>
+      </view>
+      <text class="notices-count">{{notices.length}} 条</text>
+    </view>
+
+    <view wx:if="{{loading}}" class="empty-state">
+      <text class="empty-title">正在加载公告</text>
+      <text class="empty-desc">请稍候。</text>
+    </view>
+
+    <view wx:elif="{{notices.length}}" class="notices-list">
+      <view class="notice-card" wx:for="{{notices}}" wx:key="id">
+        <view class="notice-card-head">
+          <text class="notice-type">{{item.typeLabel}}</text>
+          <text class="notice-date">{{item.publishText}}</text>
+        </view>
+        <text class="notice-title">{{item.title}}</text>
+        <text class="notice-content">{{item.content}}</text>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <text class="empty-title">暂无公告</text>
+      <text class="empty-desc">当前没有面向读者发布的公告。</text>
+    </view>
+  </view>
+</view>

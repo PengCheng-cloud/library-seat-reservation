@@ -1,0 +1,20 @@
+{
+  "name": "library-seat-reservation-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backend of the library seat reservation system",
+  "main": "src/index.js",
+  "scripts": {
+    "db:check": "node src/scripts/check-db.js",
+    "set-password": "node src/scripts/set-password.js",
+    "dev": "node src/index.js",
+    "start": "node src/index.js",
+    "test:smoke": "node src/scripts/api-smoke.js",
+    "test": "node src/scripts/api-smoke.js",
+    "test:auth": "node src/scripts/auth-selftest.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "mysql2": "^3.20.0"
+  }
+}

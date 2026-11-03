@@ -1,0 +1,134 @@
+<view class="page-shell assistant-results-page">
+  <view class="page-decor">
+    <view class="page-decor__orb page-decor__orb--one"></view>
+    <view class="page-decor__orb page-decor__orb--two"></view>
+    <view class="page-decor__orb page-decor__orb--three"></view>
+  </view>
+
+  <view wx:if="{{result}}" class="glass-card assistant-results-hero">
+    <view class="section-head">
+      <view>
+        <text class="section-title">{{result.summaryTitle}}</text>
+        <text class="section-subtitle">{{result.summaryText}}</text>
+      </view>
+      <view class="section-link" bindtap="openMap">同步到地图</view>
+    </view>
+
+    <view class="tag-list assistant-results-tags">
+      <text class="tag">{{candidateTotal}} 个可行座位</text>
+      <text class="tag" wx:if="{{plan && plan.startTime && plan.endTime}}">{{plan.startTime}} - {{plan.endTime}}</text>
+      <text class="tag" wx:if="{{plan && plan.reservationDate}}">{{plan.reservationDate}}</text>
+    </view>
+
+    <view wx:if="{{result.algorithmEvidence}}" class="assistant-model-evidence">
+      <view class="assistant-model-head">
+        <view>
+          <text class="assistant-model-kicker">AI 推理中枢</text>
+          <text class="assistant-model-title">支持向量机 SVM</text>
+        </view>
+        <text class="assistant-model-badge">实时预测</text>
+      </view>
+      <view class="assistant-model-live-visual">
+        <view class="assistant-model-node assistant-model-node--active"><text>SVM</text></view>
+        <view class="assistant-model-pulse-line"><view class="assistant-model-pulse-dot"></view></view>
+        <view class="assistant-model-node assistant-model-node--target"><text>TopN</text></view>
+      </view>
+      <text class="assistant-model-runtime">解析 {{result.recognizedFilterCount}} 项偏好 · 预测 {{result.algorithmEvidence.predictedSeatCount}} 个候选 · {{result.algorithmEvidence.inferenceDurationMs}} ms</text>
+      <view class="assistant-model-chip-row">
+        <view class="assistant-model-chip">
+          <text class="assistant-model-chip-value">{{result.algorithmEvidence.deploymentModelMacroF1Text}}</text>
+          <text class="assistant-model-chip-label">Macro-F1</text>
+        </view>
+        <view class="assistant-model-chip">
+          <text class="assistant-model-chip-value">{{result.algorithmEvidence.deploymentModelMicroF1Text}}</text>
+          <text class="assistant-model-chip-label">Micro-F1</text>
+        </view>
+        <view class="assistant-model-chip">
+          <text class="assistant-model-chip-value">{{result.algorithmEvidence.predictedSeatCount}}</text>
+          <text class="assistant-model-chip-label">候选座位</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{result && candidateSeats.length}}" class="glass-card">
+    <view class="assistant-results-list">
+      <view
+        class="assistant-results-row"
+        wx:for="{{candidateSeats}}"
+        wx:key="seatId"
+        data-seat-id="{{item.seatId}}"
+        data-zone-code="{{item.zoneCode}}"
+        bindtap="openSeatBooking"
+        hover-class="tap-scale"
+        hover-stay-time="70"
+      >
+        <view class="assistant-results-rank">{{item.rank}}</view>
+        <view class="assistant-results-main">
+          <view class="assistant-results-head">
+            <view>
+              <text class="assistant-results-title">{{item.seatId}}</text>
+              <text class="assistant-results-meta">{{item.zoneDisplayName}} · {{item.tableGroupCode}}</text>
+            </view>
+            <text class="badge badge--success">{{item.recommendationBadge}}</text>
+          </view>
+          <view class="tag-list assistant-results-reasons">
+            <text class="tag" wx:for="{{item.reasons}}" wx:key="*this">{{item}}</text>
+          </view>
+          <view wx:if="{{item.featurePreviewCards.length}}" class="assistant-results-feature-panel" catchtap="noop">
+            <view class="assistant-results-feature-head">
+              <view class="assistant-results-feature-copy">
+                <text class="assistant-results-feature-title">特征预览</text>
+                <text class="assistant-results-feature-summary">{{item.featurePreviewSummary}}</text>
+              </view>
+              <view
+                class="assistant-results-feature-toggle"
+                data-seat-id="{{item.seatId}}"
+                catchtap="toggleSeatFeaturePreview"
+              >
+                {{item.featurePreviewToggleText}}
+              </view>
+            </view>
+
+            <scroll-view
+              wx:if="{{item.featurePreviewExpanded}}"
+              class="assistant-results-feature-scroll"
+              scroll-x="true"
+              enable-flex="true"
+              show-scrollbar="false"
+            >
+              <view class="assistant-results-feature-row">
+                <view class="assistant-results-feature-card" wx:for="{{item.featurePreviewCards}}" wx:key="key">
+                  <image class="assistant-results-feature-image" src="{{item.image}}" mode="aspectFill"></image>
+                  <view class="assistant-results-feature-card-copy">
+                    <text class="assistant-results-feature-badge assistant-results-feature-badge--{{item.highlighted ? 'active' : 'default'}}">
+                      {{item.displayBadge}}
+                    </text>
+                    <text class="assistant-results-feature-card-title">{{item.title}}</text>
+                    <text class="assistant-results-feature-card-subtitle">{{item.subtitle}}</text>
+                    <text wx:if="{{item.detailText}}" class="assistant-results-feature-card-note">{{item.detailText}}</text>
+                  </view>
+                </view>
+              </view>
+            </scroll-view>
+          </view>
+          <text class="assistant-results-model">{{item.sceneModelLabel}} · {{item.sceneModelConfidenceText}}</text>
+          <view wx:if="{{item.predictedLabelsText}}" class="assistant-results-algorithm">
+            <text class="assistant-results-algorithm-line">SVM匹配标签：{{item.predictedLabelsText}}</text>
+            <text wx:if="{{item.labelScoresText}}" class="assistant-results-algorithm-line">置信度：{{item.labelScoresText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:elif="{{result}}" class="glass-card empty-state">
+    <text class="empty-title">当前没有更多候选座位</text>
+    <text class="empty-desc">可以回到 AI 助手页，换一个时间段或补充更明确的需求。</text>
+  </view>
+
+  <view wx:else class="glass-card empty-state">
+    <text class="empty-title">还没有可查看的 AI 结果</text>
+    <text class="empty-desc">请先在选座页运行一次 AI 解析，再来查看完整可行座位列表。</text>
+  </view>
+</view>

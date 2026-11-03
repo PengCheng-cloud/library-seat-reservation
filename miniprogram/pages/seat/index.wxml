@@ -1,0 +1,536 @@
+<view class="page-shell seat-page">
+  <view class="page-decor">
+    <view class="page-decor__orb page-decor__orb--one"></view>
+    <view class="page-decor__orb page-decor__orb--two"></view>
+    <view class="page-decor__orb page-decor__orb--three"></view>
+  </view>
+
+  <view class="hero-card seat-hero">
+    <view class="seat-hero-head">
+      <view class="seat-hero-copy">
+        <text class="seat-kicker">Seat Studio</text>
+        <text class="hero-title">先定时段，再在地图里选到合适位置</text>
+        <text class="hero-subtitle">时间、筛选和 AI 放在同一页，少跳转，直接做决定。</text>
+      </view>
+      <text class="badge badge--solid">{{availableCount}} 个可约</text>
+    </view>
+
+    <view class="seat-hero-metrics">
+      <view class="seat-hero-metric">
+        <text class="seat-hero-metric-label">日期</text>
+        <text class="seat-hero-metric-value">{{reservationDate}}</text>
+      </view>
+      <view class="seat-hero-metric">
+        <text class="seat-hero-metric-label">时段</text>
+        <text class="seat-hero-metric-value">{{startTime}} - {{endTime}}</text>
+      </view>
+      <view class="seat-hero-metric">
+        <text class="seat-hero-metric-label">当前分区</text>
+        <text class="seat-hero-metric-value">{{activeZoneDetail ? activeZoneDetail.zoneCode : '--'}}</text>
+      </view>
+      <view class="seat-hero-metric">
+        <text class="seat-hero-metric-label">AI 首推</text>
+        <text class="seat-hero-metric-value">{{recommendedSeats.length}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="glass-card seat-toolbar">
+    <view class="section-head seat-toolbar-head">
+      <view>
+        <text class="section-title">选座工作台</text>
+        <text class="section-subtitle">时间、地图和 AI 一页完成。</text>
+      </view>
+        <view class="seat-toolbar-badge">{{activeWorkspaceTab === 'map' ? (assistantMapMode ? 'AI 推荐地图' : '地图筛选') : 'AI 助手'}}</view>
+    </view>
+
+    <view class="seat-picker-row">
+      <picker mode="date" value="{{reservationDate}}" bindchange="onReservationDateChange">
+        <view class="seat-picker-chip">
+          <text class="seat-picker-chip-label">预约日期</text>
+          <text class="seat-picker-chip-value">{{reservationDate}}</text>
+        </view>
+      </picker>
+      <picker mode="time" value="{{startTime}}" bindchange="onStartTimeChange">
+        <view class="seat-picker-chip">
+          <text class="seat-picker-chip-label">开始时间</text>
+          <text class="seat-picker-chip-value">{{startTime}}</text>
+        </view>
+      </picker>
+      <picker mode="time" value="{{endTime}}" bindchange="onEndTimeChange">
+        <view class="seat-picker-chip">
+          <text class="seat-picker-chip-label">结束时间</text>
+          <text class="seat-picker-chip-value">{{endTime}}</text>
+        </view>
+      </picker>
+    </view>
+
+    <scroll-view class="seat-time-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+      <view class="seat-time-row">
+        <view
+          wx:for="{{timeQuickOptions}}"
+          wx:key="key"
+          class="seat-time-chip {{item.selected ? 'seat-time-chip--active' : ''}}"
+          data-start-time="{{item.startTime}}"
+          data-end-time="{{item.endTime}}"
+          bindtap="applyQuickTimePreset"
+          hover-class="tap-scale"
+          hover-stay-time="70"
+        >
+          <text class="seat-time-chip-title">{{item.label}}</text>
+          <text class="seat-time-chip-meta">{{item.startTime}} - {{item.endTime}}</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="seat-tab-row">
+      <view
+        wx:for="{{workspaceTabs}}"
+        wx:key="key"
+        class="seat-tab {{item.selected ? 'seat-tab--active' : ''}}"
+        data-tab-key="{{item.key}}"
+        bindtap="selectWorkspaceTab"
+      >
+        {{item.label}}
+      </view>
+    </view>
+  </view>
+
+  <block wx:if="{{activeWorkspaceTab === 'map'}}">
+    <view class="glass-card seat-filter-surface">
+      <view class="section-head">
+        <view>
+            <text class="section-title">{{assistantMapMode ? 'AI 推荐地图' : '地图筛选'}}</text>
+            <text class="section-subtitle">{{activePreferenceSummary}}</text>
+          </view>
+        <view class="seat-filter-actions">
+          <view wx:if="{{!assistantMapMode}}" class="section-link" bindtap="toggleFilterPanel">{{filterPanelExpanded ? '收起筛选' : '更多筛选'}}</view>
+          <view class="section-link" bindtap="resetFilters">重置</view>
+          <view class="section-link" bindtap="switchToSmart">AI 辅助</view>
+        </view>
+      </view>
+
+      <scroll-view wx:if="{{!assistantMapMode}}" class="seat-preset-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+        <view class="seat-preset-row">
+          <view
+            wx:for="{{scenePresets}}"
+            wx:key="key"
+            class="seat-preset-chip {{item.selected ? 'seat-preset-chip--active' : ''}}"
+            data-preset-key="{{item.key}}"
+            bindtap="selectPreset"
+            hover-class="tap-scale"
+            hover-stay-time="70"
+          >
+            <text class="seat-preset-title">{{item.label}}</text>
+            <text class="seat-preset-meta">{{item.filterSummary}}</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view wx:if="{{!assistantMapMode && (filterPanelExpanded || activeFilterDetails.length)}}" class="seat-filter-expand">
+        <scroll-view wx:if="{{filterPanelExpanded}}" class="seat-filter-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+          <view class="seat-filter-row">
+            <view
+              wx:for="{{filterOptions}}"
+              wx:key="key"
+              class="seat-filter-chip {{item.selected ? 'seat-filter-chip--active' : ''}}"
+              data-filter-key="{{item.key}}"
+              bindtap="toggleFilter"
+              hover-class="tap-scale"
+              hover-stay-time="70"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </scroll-view>
+
+        <view wx:if="{{activeFilterDetails.length}}" class="seat-active-filter-list">
+          <view
+            wx:for="{{activeFilterDetails}}"
+            wx:key="key"
+            class="seat-active-filter-tag"
+            data-filter-key="{{item.key}}"
+            bindtap="removeActiveFilter"
+          >
+            {{item.label}} ×
+          </view>
+        </view>
+      </view>
+
+      <view class="seat-legend-row">
+        <view class="seat-legend-item seat-legend-item--{{item.tone}}" wx:for="{{planLegendItems}}" wx:key="tone">
+          <view class="seat-legend-dot seat-legend-dot--{{item.tone}}"></view>
+          <text class="seat-legend-label">{{item.label}}</text>
+        </view>
+      </view>
+
+      <view class="seat-map-stage-shell">
+        <view class="seat-map-stage" style="{{floorPlanStageStyle}}">
+          <view class="seat-map-stage-glow"></view>
+          <image class="seat-map-image" src="{{floorPlanImage}}" mode="scaleToFill"></image>
+          <view class="seat-map-core-badge">
+            <text class="seat-map-core-title">中庭共享区</text>
+            <text class="seat-map-core-note">点周围分区，看当前时段内哪些位置仍可预约。</text>
+          </view>
+          <view class="seat-map-overlay">
+            <view
+              wx:for="{{planHotspots}}"
+              wx:key="key"
+              class="seat-hotspot seat-hotspot--{{item.tone}} {{item.selected ? 'seat-hotspot--selected' : ''}} {{item.shape === 'side' ? 'seat-hotspot--side' : 'seat-hotspot--rail'}}"
+              style="{{item.hotspotStyle}}"
+              data-zone-code="{{item.zoneCode}}"
+              bindtap="selectZone"
+              hover-class="seat-hotspot--pressed"
+            >
+              <text class="seat-hotspot-code">{{item.zoneCode}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{activeZoneDetail}}" class="seat-zone-strip">
+        <view class="seat-zone-strip-main" bindtap="openActiveZonePage">
+          <view class="seat-zone-strip-head">
+            <text class="seat-zone-strip-code">{{activeZoneDetail.zoneCode}}</text>
+            <text class="seat-zone-strip-title">{{activeZoneDetail.displayName}}</text>
+          </view>
+          <text class="seat-zone-strip-desc">{{activeZoneDetail.tableGroupCount}} 个桌组 · {{activeZoneDetail.matchedSeatCount || 0}} 个可约</text>
+        </view>
+
+        <view class="seat-zone-stat-list">
+          <view class="seat-zone-stat" wx:for="{{activeZoneStats}}" wx:key="label">
+            <text class="seat-zone-stat-value">{{item.value}}</text>
+            <text class="seat-zone-stat-label">{{item.label}}</text>
+          </view>
+        </view>
+
+        <view class="action-row seat-map-action-row">
+          <button class="secondary-btn" bindtap="switchToSmart">试试 AI 助手</button>
+          <button class="primary-btn" bindtap="openActiveZonePage">进入 {{activeZoneDetail.zoneCode}} 分区</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="glass-card seat-list-surface">
+      <view class="section-head">
+        <view>
+          <text class="section-title">{{recommendationSummary ? recommendationSummary.title : '当前候选'}}</text>
+          <text class="section-subtitle">{{recommendationSummary ? recommendationSummary.description : '系统会优先展示当前条件下匹配度更高的座位。'}}</text>
+        </view>
+        <button wx:if="{{recommendedSeats.length}}" class="secondary-btn seat-top-action" bindtap="useTopRecommendation">直接预约首推</button>
+      </view>
+
+      <view wx:if="{{recommendationSummary && recommendationSummary.hintTags && recommendationSummary.hintTags.length}}" class="tag-list seat-map-tags">
+        <text class="tag" wx:for="{{recommendationSummary.hintTags}}" wx:key="*this">{{item}}</text>
+      </view>
+
+      <text wx:if="{{recommendationSummary && recommendationSummary.focusText}}" class="seat-focus-text">{{recommendationSummary.focusText}}</text>
+
+      <view wx:if="{{recommendedSeats.length}}" class="seat-line-list">
+        <view
+          class="seat-line-row"
+          wx:for="{{recommendedSeats}}"
+          wx:key="seatId"
+          data-seat-id="{{item.seatId}}"
+          bindtap="selectSeat"
+          hover-class="tap-scale"
+          hover-stay-time="70"
+        >
+          <view class="seat-line-main">
+            <view class="seat-line-head">
+              <view>
+                <text class="seat-line-title">{{item.seatId}}</text>
+                <text class="seat-line-meta">{{item.zoneDisplayName}} · {{item.seatType}} · {{item.tableGroupCode}}</text>
+              </view>
+              <view class="seat-line-side">
+                <text class="status-badge status-badge--{{item.statusTone}}">{{item.statusLabel}}</text>
+                <text class="seat-line-score">{{item.displayScore}}</text>
+              </view>
+            </view>
+
+            <view class="tag-list seat-line-tags">
+              <text class="tag" wx:for="{{item.reasons}}" wx:key="*this">{{item}}</text>
+            </view>
+
+            <view wx:if="{{!assistantMapMode && item.featurePreviewCards.length}}" class="seat-feature-panel" catchtap="noop">
+              <view class="seat-feature-head">
+                <view class="seat-feature-copy">
+                  <text class="seat-feature-title">环境预览</text>
+                  <text class="seat-feature-summary">{{item.featurePreviewSummary}}</text>
+                </view>
+                <view
+                  class="seat-feature-toggle"
+                  data-source="recommended"
+                  data-seat-id="{{item.seatId}}"
+                  catchtap="toggleSeatCardFeaturePreview"
+                >
+                  {{item.featurePreviewToggleText}}
+                </view>
+              </view>
+
+              <scroll-view
+                wx:if="{{item.featurePreviewExpanded}}"
+                class="seat-feature-scroll"
+                scroll-x="true"
+                enable-flex="true"
+                show-scrollbar="false"
+              >
+                <view class="seat-feature-row">
+                  <view class="seat-feature-card" wx:for="{{item.featurePreviewCards}}" wx:key="key">
+                    <image class="seat-feature-image" src="{{item.image}}" mode="aspectFill"></image>
+                    <view class="seat-feature-card-copy">
+                      <text class="seat-feature-badge seat-feature-badge--{{item.highlighted ? 'active' : 'default'}}">{{item.displayBadge}}</text>
+                      <text class="seat-feature-card-title">{{item.title}}</text>
+                      <text class="seat-feature-card-subtitle">{{item.subtitle}}</text>
+                      <text wx:if="{{item.detailText}}" class="seat-feature-card-note">{{item.detailText}}</text>
+                    </view>
+                  </view>
+                </view>
+              </scroll-view>
+            </view>
+          </view>
+          <text class="seat-list-arrow">预约</text>
+        </view>
+      </view>
+
+      <view wx:if="{{!recommendedSeats.length}}" class="empty-state">
+        <text class="empty-title">当前时段没有合适候选</text>
+        <text class="empty-desc">{{assistantMapMode ? '可以返回 AI 助手重新生成推荐，或切换时间段后再次同步地图。' : '可以直接切换时间段、场景预设或筛选项，再回到地图继续比较。'}}</text>
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="glass-card seat-smart-surface">
+      <view class="section-head">
+        <view>
+          <text class="section-title">AI 辅助选座</text>
+          <text class="section-subtitle">把模糊需求交给 AI 整理，生成建议后同步到推荐地图。</text>
+        </view>
+        <view class="section-link" bindtap="switchToMap">看地图</view>
+      </view>
+
+      <view class="textarea-shell seat-ai-input-shell">
+        <textarea
+          class="textarea-field"
+          value="{{assistantInput}}"
+          maxlength="120"
+          auto-height="true"
+          placeholder="例如：安静、靠窗、能充电，适合下午自习"
+          bindinput="onAssistantInput"
+        />
+        <text class="seat-char-count">{{assistantInput.length}} / 120</text>
+      </view>
+
+      <scroll-view class="seat-prompt-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+        <view class="seat-prompt-row">
+          <view
+            class="seat-prompt"
+            wx:for="{{assistantPrompts}}"
+            wx:key="*this"
+            data-prompt="{{item}}"
+            bindtap="useAssistantPrompt"
+            hover-class="tap-scale"
+            hover-stay-time="70"
+          >
+            {{item}}
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="action-row seat-action-row">
+        <button class="primary-btn" loading="{{assistantLoading}}" bindtap="runAssistant">{{assistantLoading ? '正在解析…' : '开始分析'}}</button>
+        <button class="secondary-btn" disabled="{{!(assistantResult && assistantResult.applyPlan)}}" bindtap="applyAssistantPlan">同步到地图</button>
+      </view>
+
+      <view wx:if="{{assistantError}}" class="seat-error-card">{{assistantError}}</view>
+
+      <view wx:if="{{assistantLoading}}" class="seat-ai-live-panel">
+        <view class="seat-ai-live-orbit">
+          <view class="seat-ai-live-core">AI</view>
+          <view class="seat-ai-live-ring seat-ai-live-ring--one"></view>
+          <view class="seat-ai-live-ring seat-ai-live-ring--two"></view>
+        </view>
+        <view class="seat-ai-live-main">
+          <text class="seat-ai-live-title">匹配模型实时预测中</text>
+          <view class="seat-ai-live-flow">
+            <text>需求解析</text>
+            <text>模型匹配</text>
+            <text>推荐排序</text>
+          </view>
+          <view class="seat-ai-live-track">
+            <view class="seat-ai-live-beam"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{assistantResult}}" class="glass-card seat-smart-result-surface">
+      <view class="section-head">
+        <view>
+          <text class="section-title">{{assistantResult.summaryTitle}}</text>
+          <text class="section-subtitle">{{assistantResult.summaryText}}</text>
+        </view>
+        <view wx:if="{{assistantResult.applyPlan}}" class="section-link" bindtap="applyAssistantPlan">同步到地图</view>
+      </view>
+
+      <view class="seat-ai-overview">
+        <view class="seat-ai-score-panel">
+          <text class="seat-ai-score">{{assistantInsightCenterValue}}</text>
+          <text class="seat-ai-score-label">{{assistantInsightCenterLabel}}</text>
+          <view class="seat-ai-progress-track">
+            <view class="seat-ai-progress-bar" style="width: {{assistantInsightProgressWidth}};"></view>
+          </view>
+        </view>
+
+        <view class="seat-ai-stat-grid">
+          <view class="seat-ai-stat-card" wx:for="{{assistantInsightStats}}" wx:key="label">
+            <text class="seat-ai-stat-value">{{item.value}}</text>
+            <text class="seat-ai-stat-label">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="seat-collapse-head" bindtap="toggleAssistantDetail">
+        <text class="seat-collapse-title">{{assistantResult.algorithmEvidenceView.processTitle}}</text>
+        <text class="seat-collapse-action">{{assistantDetailExpanded ? '收起' : '展开'}}</text>
+      </view>
+
+      <view wx:if="{{assistantDetailExpanded}}" class="seat-ai-detail">
+        <view class="seat-ai-legend-list">
+          <view class="seat-ai-legend-row" wx:for="{{assistantInsightLegend}}" wx:key="label">
+            <view class="seat-ai-legend-dot" style="background: {{item.color}};"></view>
+            <view class="seat-ai-legend-copy">
+              <text class="seat-ai-legend-name">{{item.label}}</text>
+              <text class="seat-ai-legend-note">{{item.note}}</text>
+            </view>
+          </view>
+        </view>
+
+        <view wx:if="{{assistantResult.algorithmEvidence}}" class="seat-model-evidence">
+          <view class="seat-model-evidence-head">
+            <view>
+              <text class="seat-model-kicker">{{assistantResult.algorithmEvidenceView.kicker}}</text>
+              <text class="seat-model-title">{{assistantResult.algorithmEvidenceView.modelTitle}}</text>
+            </view>
+            <text class="seat-model-badge">{{assistantResult.algorithmEvidenceView.badgeText}}</text>
+          </view>
+          <view class="seat-model-live-visual">
+            <view class="seat-model-node seat-model-node--active">
+              <text>{{assistantResult.algorithmEvidenceView.modelShortName}}</text>
+            </view>
+            <view class="seat-model-pulse-line">
+              <view class="seat-model-pulse-dot"></view>
+            </view>
+            <view class="seat-model-node seat-model-node--target">
+              <text>{{assistantResult.algorithmEvidenceView.targetLabel}}</text>
+            </view>
+          </view>
+          <text class="seat-model-runtime">{{assistantResult.algorithmEvidenceView.runtimeText}}</text>
+          <text wx:if="{{assistantResult.algorithmEvidenceView.datasetText}}" class="seat-model-note">{{assistantResult.algorithmEvidenceView.datasetText}}</text>
+          <view class="seat-model-chip-row">
+            <view class="seat-model-chip" wx:for="{{assistantResult.algorithmEvidenceView.metricCards}}" wx:key="label">
+              <text class="seat-model-chip-value">{{item.value}}</text>
+              <text class="seat-model-chip-label">{{item.label}}</text>
+            </view>
+          </view>
+          <view wx:if="{{assistantResult.algorithmEvidenceView.hasDeepLearningComparison}}" class="seat-model-compare">
+            <view class="seat-model-compare-head">
+              <text class="seat-model-compare-title">深度学习对比</text>
+              <text class="seat-model-compare-name">{{assistantResult.algorithmEvidenceView.deepLearningTitle}}</text>
+            </view>
+            <view class="seat-model-compare-metrics">
+              <view class="seat-model-compare-metric" wx:for="{{assistantResult.algorithmEvidenceView.deepLearningMetrics}}" wx:key="label">
+                <text class="seat-model-compare-value">{{item.value}}</text>
+                <text class="seat-model-compare-label">{{item.label}}</text>
+              </view>
+            </view>
+            <text class="seat-model-note">{{assistantResult.algorithmEvidenceView.deepLearningNote}}</text>
+          </view>
+          <view class="seat-model-process">
+            <view class="seat-model-process-row" wx:for="{{assistantResult.algorithmEvidenceView.processRows}}" wx:key="index">
+              <text class="seat-model-process-index">{{item.index}}</text>
+              <text class="seat-model-process-text">{{item.text}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{assistantResult.topSeats && assistantResult.topSeats.length}}" class="seat-line-list seat-line-list--compact">
+        <view
+          class="seat-line-row"
+          wx:for="{{assistantResult.topSeats}}"
+          wx:key="seatId"
+          data-seat-id="{{item.seatId}}"
+          data-zone-code="{{item.zoneCode}}"
+          bindtap="handleAssistantSeatSelect"
+          hover-class="tap-scale"
+          hover-stay-time="70"
+        >
+          <view class="seat-rank-pill">Top {{item.rank}}</view>
+          <view class="seat-line-main">
+            <view class="seat-line-head">
+              <view>
+                <text class="seat-line-title">{{item.seatId}}</text>
+                <text class="seat-line-meta">{{item.zoneDisplayName}} · {{item.tableGroupCode}}</text>
+              </view>
+              <text class="badge badge--success">{{item.recommendationBadge}}</text>
+            </view>
+
+            <view class="tag-list seat-line-tags">
+              <text class="tag" wx:for="{{item.reasons}}" wx:key="*this">{{item}}</text>
+            </view>
+
+            <view wx:if="{{item.featurePreviewCards.length}}" class="seat-feature-panel" catchtap="noop">
+              <view class="seat-feature-head">
+                <view class="seat-feature-copy">
+                  <text class="seat-feature-title">环境预览</text>
+                  <text class="seat-feature-summary">{{item.featurePreviewSummary}}</text>
+                </view>
+                <view
+                  class="seat-feature-toggle"
+                  data-source="assistant"
+                  data-seat-id="{{item.seatId}}"
+                  catchtap="toggleSeatCardFeaturePreview"
+                >
+                  {{item.featurePreviewToggleText}}
+                </view>
+              </view>
+
+              <scroll-view
+                wx:if="{{item.featurePreviewExpanded}}"
+                class="seat-feature-scroll"
+                scroll-x="true"
+                enable-flex="true"
+                show-scrollbar="false"
+              >
+                <view class="seat-feature-row">
+                  <view class="seat-feature-card" wx:for="{{item.featurePreviewCards}}" wx:key="key">
+                    <image class="seat-feature-image" src="{{item.image}}" mode="aspectFill"></image>
+                    <view class="seat-feature-card-copy">
+                      <text class="seat-feature-badge seat-feature-badge--{{item.highlighted ? 'active' : 'default'}}">{{item.displayBadge}}</text>
+                      <text class="seat-feature-card-title">{{item.title}}</text>
+                      <text class="seat-feature-card-subtitle">{{item.subtitle}}</text>
+                      <text wx:if="{{item.detailText}}" class="seat-feature-card-note">{{item.detailText}}</text>
+                    </view>
+                  </view>
+                </view>
+              </scroll-view>
+            </view>
+
+            <text class="seat-result-model">{{item.sceneModelLabel}} · {{item.sceneModelConfidenceText}}</text>
+            <view wx:if="{{item.predictedLabelsText}}" class="seat-result-algorithm">
+              <text class="seat-result-algorithm-line">{{item.algorithmModelShortName || '模型'}}：{{item.predictedLabelsText}}</text>
+              <text wx:if="{{item.labelScoresText}}" class="seat-result-algorithm-line">置信度：{{item.labelScoresText}}</text>
+            </view>
+          </view>
+          <text class="seat-list-arrow">预约</text>
+        </view>
+      </view>
+
+      <view wx:if="{{assistantResult.candidateMoreCount > 0}}" class="seat-more-row">
+        <button class="secondary-btn seat-more-btn" bindtap="openAssistantResults">查看更多 {{assistantResult.candidateTotal}} 个候选</button>
+      </view>
+    </view>
+  </block>
+</view>

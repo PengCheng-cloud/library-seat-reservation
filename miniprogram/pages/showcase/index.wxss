@@ -1,0 +1,128 @@
+.showcase-hero-card {
+  background: linear-gradient(145deg, rgba(248, 255, 253, 0.99) 0%, rgba(237, 255, 248, 0.97) 100%);
+}
+
+.showcase-hero-tags {
+  margin-top: 16rpx;
+}
+
+.showcase-list {
+  display: grid;
+  gap: 18rpx;
+}
+
+.showcase-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.showcase-card-image {
+  width: 100%;
+  height: 280rpx;
+}
+
+.showcase-card-body {
+  padding: 24rpx 24rpx 26rpx;
+}
+
+.showcase-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+.showcase-card-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.showcase-card-subtitle {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 23rpx;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.showcase-card-arrow {
+  flex: 0 0 auto;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--accent-strong);
+}
+
+.showcase-card-summary {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 23rpx;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.showcase-card-gallery {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 21rpx;
+  color: var(--accent-strong);
+}
+
+.showcase-supplement-card {
+  background: linear-gradient(145deg, rgba(248, 255, 253, 0.99) 0%, rgba(239, 255, 249, 0.96) 100%);
+}
+
+.showcase-supplement-grid {
+  display: grid;
+  gap: 16rpx;
+  margin-top: 18rpx;
+}
+
+.showcase-supplement-item {
+  overflow: hidden;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1rpx solid var(--line);
+}
+
+.showcase-supplement-image {
+  width: 100%;
+  height: 240rpx;
+}
+
+.showcase-supplement-body {
+  padding: 20rpx 20rpx 22rpx;
+}
+
+.showcase-supplement-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.showcase-supplement-subtitle {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.showcase-supplement-summary {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.showcase-supplement-tags {
+  margin-top: 14rpx;
+}
+
+.tap-scale {
+  transform: scale(0.985);
+  opacity: 0.94;
+}

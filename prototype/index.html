@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>图书馆座位预定推荐系统</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero-card">
+        <div class="hero-copy">
+          <p class="eyebrow">Graduation Project Prototype</p>
+          <h1>图书馆座位预定推荐系统</h1>
+          <p class="hero-text">
+            一期聚焦“看图选区、按标签筛座、推荐具体座位”。左侧用七层平面图做区域交互，右侧提供偏好筛选、推荐结果和预定模拟。
+          </p>
+        </div>
+        <div class="hero-side">
+          <div id="heroStats" class="hero-stats"></div>
+          <div class="preset-row">
+            <button class="preset-chip" data-preset="sprint">冲刺学习</button>
+            <button class="preset-chip" data-preset="window">临窗阅读</button>
+            <button class="preset-chip" data-preset="group">结伴自习</button>
+          </div>
+        </div>
+      </header>
+
+      <div id="appStatus" class="status-banner hidden"></div>
+
+      <main class="workspace">
+        <section class="panel map-panel">
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">Floor Plan</p>
+              <h2>七层热区选座</h2>
+            </div>
+            <div class="legend-row">
+              <span class="legend-item"><i class="legend-swatch legend-swatch--muted"></i>普通区域</span>
+              <span class="legend-item"><i class="legend-swatch legend-swatch--hot"></i>匹配较多</span>
+              <span class="legend-item"><i class="legend-swatch legend-swatch--active"></i>当前区域</span>
+            </div>
+          </div>
+
+          <div class="map-stage">
+            <img class="map-image" src="https://your-server.example.com/static/library-gallery/level-7-floor-plan.jpg" alt="图书馆七层平面图" />
+            <div class="map-grid"></div>
+            <div class="atrium-frame"></div>
+            <div id="zoneLayer" class="zone-layer" aria-label="可点击座位分区"></div>
+          </div>
+
+          <div class="map-footer">
+            <div class="footer-note">
+              <strong>交互方式：</strong>先点分区再选座，或者先勾选标签让系统高亮推荐区域。
+            </div>
+            <button id="clearZoneBtn" class="secondary-btn">取消当前分区</button>
+          </div>
+        </section>
+
+        <aside class="sidebar">
+          <section class="panel filter-panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Preferences</p>
+                <h2>标签筛选</h2>
+              </div>
+              <button id="resetFiltersBtn" class="secondary-btn">清空筛选</button>
+            </div>
+
+            <label class="search-box">
+              <span>搜索座位号 / 标签 / 分区</span>
+              <input
+                id="searchInput"
+                type="search"
+                placeholder="例如 Q3、靠窗、有插座"
+                autocomplete="off"
+              />
+            </label>
+
+            <div id="filterChips" class="filter-grid"></div>
+            <div id="activeFilterBar" class="active-filter-bar"></div>
+          </section>
+
+          <section class="panel summary-panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Zone Focus</p>
+                <h2>当前分区</h2>
+              </div>
+            </div>
+            <div id="zoneSummary" class="zone-summary empty-state">
+              还没有选中分区。你可以先点左侧平面图，也可以直接按标签筛选。
+            </div>
+          </section>
+
+          <section class="panel reservation-panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Reservation</p>
+                <h2>预定草稿</h2>
+              </div>
+            </div>
+            <div id="selectedSeatPanel" class="selected-seat empty-state">
+              选中某个座位后，这里会显示预定信息和推荐理由。
+            </div>
+            <button id="reserveBtn" class="primary-btn" disabled>确认预定</button>
+          </section>
+        </aside>
+      </main>
+
+      <section class="panel results-panel">
+        <div class="results-header">
+          <div>
+            <p class="panel-kicker">Recommendation</p>
+            <h2>推荐结果与可选座位</h2>
+          </div>
+          <div class="result-actions">
+            <button id="topToggleBtn" class="secondary-btn">只看推荐前 12 个</button>
+          </div>
+        </div>
+
+        <div id="resultMeta" class="result-meta"></div>
+        <div id="recommendationStrip" class="recommendation-strip"></div>
+        <div id="tableGroupStrip" class="table-group-strip"></div>
+        <div id="seatGrid" class="seat-grid"></div>
+      </section>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
