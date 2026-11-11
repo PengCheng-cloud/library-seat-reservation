@@ -7,6 +7,13 @@ machine-learning based seat recommendation.
 
 > The user interface is in Chinese, because the system was built for a Chinese university library.
 
+## Demo
+
+[![Screenshots of the Mini Program: home page, AI seat search, recommended seats, reservation confirmation, rule checks and my reservations](docs/screenshots.png)](docs/demo.mp4)
+
+▶ **[Watch the demo video](docs/demo.mp4)** (about 2 minutes, recorded on a phone): searching for a seat on the map and with the
+AI assistant, checking the recommended seats, reserving a time slot, and checking in and out.
+
 ## What it does
 
 **Readers (WeChat Mini Program)**
@@ -51,11 +58,20 @@ relevant rows with `SELECT … FOR UPDATE` before checking for conflicts:
 1. Start a transaction
 2. Lock the user row and the existing reservations of the seat
 3. Check the rules: account conflict, seat conflict, opening hours, maximum duration, credit status
-4. Insert the reservation and its time slots, then commit (or roll back on any error)
+4. Insert the reservation, then commit (or roll back on any error)
 
 Because the second request has to wait for the lock, it sees the first reservation and
 is rejected. Only one of several concurrent requests for the same seat and time slot succeeds
 (`server/src/repositories/reservation-repository.js`).
+
+### Database design
+
+The MySQL schema has 12 tables (`sql/001_schema.sql`): users, zones, seats, reservations,
+check-in and leave records, credit log, notices, admin and seat status logs, and system configuration.
+Foreign keys keep the references consistent, unique keys protect natural identifiers
+(student number, seat code, reservation number), and composite indexes follow the main queries,
+for example `(seat_id, reservation_date, start_time)` for the seat conflict check and
+`(user_id, reservation_date, status)` for a reader's reservations.
 ### Rules checked in the backend
 
 All business rules (time validity, opening hours, maximum duration of 240 minutes,
@@ -127,6 +143,7 @@ sql/             schema, seed data and migrations
 scripts/         dataset construction, model training and evaluation, runtime inference
 data/            seat master data and recommendation runtime data
 prototype/       first web prototype of the seat filter
+docs/            demo video and screenshots
 ```
 
 ## License
