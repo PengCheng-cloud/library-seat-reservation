@@ -6,6 +6,7 @@ for readers, a Node.js backend, a MySQL database, a web admin dashboard and a
 machine-learning based seat recommendation.
 
 > The user interface is in Chinese, because the system was built for a Chinese university library.
+> The thesis itself is in [`docs/thesis_zh.pdf`](docs/thesis_zh.pdf) (70 pages, in Chinese, with an English abstract).
 
 ## Demo
 
@@ -198,7 +199,7 @@ sql/             schema, seed data and migrations; sql/dev/ generates synthetic 
 scripts/         dataset construction, model training and evaluation, runtime inference
 data/            seat master data and recommendation runtime data
 prototype/       first web prototype of the seat filter
-docs/            demo video and screenshots, database.md, recommendation.md
+docs/            thesis (PDF), demo video and screenshots, database.md, recommendation.md
 ```
 
 ## License
