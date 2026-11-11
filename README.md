@@ -9,10 +9,14 @@ machine-learning based seat recommendation.
 
 ## Demo
 
-[![Screenshots of the Mini Program: home page, AI seat search, recommended seats, reservation confirmation, rule checks and my reservations](docs/screenshots.png)](docs/demo.mp4)
+<p align="center">
+  <img src="docs/demo.gif" width="270" alt="Screen recording of the Mini Program: seat search with the AI assistant, recommended seats, reservation, check-in and check-out">
+</p>
 
-▶ **[Watch the demo video](docs/demo.mp4)** (about 2 minutes, recorded on a phone): searching for a seat on the map and with the
-AI assistant, checking the recommended seats, reserving a time slot, and checking in and out.
+The recording above plays at three times the normal speed. The full video (about 2 minutes,
+recorded on a phone) is in [`docs/demo.mp4`](docs/demo.mp4).
+
+![Screenshots of the Mini Program: home page, AI seat search, recommended seats, reservation confirmation, rule checks and my reservations](docs/screenshots.png)
 
 ## What it does
 
