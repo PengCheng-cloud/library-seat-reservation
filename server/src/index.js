@@ -1505,6 +1505,16 @@ async function requestHandler(request, response) {
       message: `未匹配到接口 ${request.method} ${pathname}`
     });
   } catch (error) {
+    // A transaction that MySQL aborted because of a deadlock or a lock wait timeout
+    // changed nothing. Tell the client to try again instead of reporting an internal error.
+    if (error && (error.code === "ER_LOCK_DEADLOCK" || error.code === "ER_LOCK_WAIT_TIMEOUT")) {
+      sendJson(response, 503, {
+        code: "DATABASE_BUSY",
+        message: "系统繁忙，请稍后重试"
+      });
+      return;
+    }
+
     const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 500;
 
     if (error.payload && typeof error.payload === "object") {

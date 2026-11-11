@@ -11,7 +11,10 @@
     "start": "node src/index.js",
     "test:smoke": "node src/scripts/api-smoke.js",
     "test": "node src/scripts/api-smoke.js",
-    "test:auth": "node src/scripts/auth-selftest.js"
+    "test:auth": "node src/scripts/auth-selftest.js",
+    "test:concurrency": "node src/scripts/concurrency-test.js",
+    "bench:booking": "node src/scripts/bench-booking.js",
+    "bench:inference": "node src/scripts/bench-inference.js"
   },
   "dependencies": {
     "dotenv": "^17.3.1",

@@ -1,4 +1,10 @@
+const crypto = require("crypto");
 const { getPool, query } = require("../lib/db");
+const { SLOT_MINUTES, isAlignedToSlot, buildSlots } = require("../lib/reservation-slots");
+
+// How often a booking transaction is retried when MySQL reports a deadlock or a lock wait timeout.
+const MAX_TRANSACTION_ATTEMPTS = 3;
+const RETRYABLE_LOCK_ERRORS = new Set(["ER_LOCK_DEADLOCK", "ER_LOCK_WAIT_TIMEOUT"]);
 
 const CURRENT_STATUSES = ["reserved", "checked_in", "temporary_leave"];
 const HISTORY_STATUSES = ["completed", "cancelled", "no_show", "violation", "admin_released"];
@@ -366,6 +372,28 @@ async function getReservationSyncContext(connection, reservationId) {
   );
 
   return rows[0] || null;
+}
+
+async function insertReservationSlots(connection, { reservationId, seatId, reservationDate, startTime, endTime }) {
+  const slots = buildSlots(startTime, endTime);
+  if (slots.length === 0) {
+    return;
+  }
+
+  const placeholders = slots.map(() => "(?, ?, ?, ?, ?)").join(", ");
+  const params = [];
+  for (const slot of slots) {
+    params.push(reservationId, seatId, reservationDate, slot.slotStart, slot.slotEnd);
+  }
+
+  await connection.query(
+    `
+      INSERT INTO seat_reservation_slot
+        (reservation_id, seat_id, reservation_date, slot_start, slot_end)
+      VALUES ${placeholders}
+    `,
+    params
+  );
 }
 
 async function deleteReservationSlots(connection, reservationId) {
@@ -967,6 +995,12 @@ function validateReservationInput(input, context, rules) {
       detail: "结束时间必须晚于开始时间"
     },
     {
+      key: "time_step",
+      label: `时间为 ${SLOT_MINUTES} 分钟的整数倍`,
+      passed: isAlignedToSlot(startTime) && isAlignedToSlot(endTime),
+      detail: `开始和结束时间需落在 ${SLOT_MINUTES} 分钟刻度上，例如 09:00、09:05`
+    },
+    {
       key: "future_time",
       label: "预约开始时间不能早于当前时间",
       passed: Boolean(requestStartAt) && !Number.isNaN(requestStartAt.getTime()) && requestStartAt >= now,
@@ -1064,7 +1098,7 @@ function buildReservationNo() {
     String(now.getMinutes()).padStart(2, "0"),
     String(now.getSeconds()).padStart(2, "0"),
     String(now.getMilliseconds()).padStart(3, "0"),
-    String(Math.floor(Math.random() * 1000)).padStart(3, "0")
+    String(crypto.randomInt(1000000)).padStart(6, "0")
   ];
   return `RS${parts.join("")}`;
 }
@@ -1079,7 +1113,6 @@ async function createReservation(input, rules) {
 
   const user = validation.user;
   const seat = validation.seat;
-  const reservationNo = buildReservationNo();
   const reservationDate = validation.request.reservationDate;
   const startTime = validation.request.startTime;
   const endTime = validation.request.endTime;
@@ -1096,15 +1129,82 @@ async function createReservation(input, rules) {
     closeTime: rules.closeTime
   });
 
+  const booking = {
+    user,
+    seat,
+    reservationDate,
+    startTime,
+    endTime,
+    durationMinutes: validation.durationMinutes,
+    checkinOpenAt,
+    checkinDeadlineAt,
+    ruleSnapshot
+  };
+
+  // A deadlock or lock wait timeout rolls the whole transaction back, so it is safe
+  // to run it again. After the last attempt the reader gets a clear "busy" answer
+  // instead of an internal error.
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await createReservationInTransaction({ ...booking, reservationNo: buildReservationNo() }, rules);
+    } catch (error) {
+      // Two bookings in the same millisecond can draw the same reservation number.
+      // That is not a seat conflict, so the booking is tried again with a new number.
+      const isRetryable = error && (RETRYABLE_LOCK_ERRORS.has(error.code) || error.code === "RESERVATION_NO_COLLISION");
+      if (!isRetryable) {
+        throw error;
+      }
+
+      if (attempt >= MAX_TRANSACTION_ATTEMPTS) {
+        throw buildError("当前预约人数较多，请稍后重试", 503, "RESERVATION_BUSY");
+      }
+    }
+  }
+}
+
+// One booking attempt inside a single transaction.
+//
+// Locking protocol:
+//   1. lock the reader's row  (serialises all bookings of one reader)
+//   2. lock the seat's row    (serialises all bookings of one seat)
+// Every booking takes the two locks in this order, so two bookings can never wait
+// for each other in a cycle. The transaction runs at READ COMMITTED: the checks
+// below then see everything committed before the locks were granted, and InnoDB
+// takes no gap locks, which caused deadlocks between concurrent inserts before.
+async function createReservationInTransaction(booking, rules) {
+  const {
+    user,
+    seat,
+    reservationNo,
+    reservationDate,
+    startTime,
+    endTime,
+    durationMinutes,
+    checkinOpenAt,
+    checkinDeadlineAt,
+    ruleSnapshot
+  } = booking;
+
   const connection = await getPool().getConnection();
 
   try {
+    // Applies to the next transaction on this connection only.
+    await connection.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
     await connection.beginTransaction();
 
     await connection.execute(
       "SELECT id FROM app_user WHERE id = ? FOR UPDATE",
       [user.id]
     );
+
+    const [lockedSeatRows] = await connection.execute(
+      "SELECT seat_status AS seatStatus FROM library_seat WHERE id = ? FOR UPDATE",
+      [seat.id]
+    );
+
+    if (!lockedSeatRows[0] || lockedSeatRows[0].seatStatus !== "available") {
+      throw buildError("该座位当前不可预约", 409, "RESERVATION_SEAT_UNAVAILABLE");
+    }
 
     const [activeCountRows] = await connection.execute(
       `
@@ -1158,7 +1258,6 @@ async function createReservation(input, rules) {
           AND start_time < ?
           AND end_time > ?
         LIMIT 1
-        FOR UPDATE
       `,
       [user.id, reservationDate, ...CURRENT_STATUSES, `${endTime}:00`, `${startTime}:00`]
     );
@@ -1184,7 +1283,6 @@ async function createReservation(input, rules) {
           AND start_time < ?
           AND end_time > ?
         LIMIT 1
-        FOR UPDATE
       `,
       [seat.id, reservationDate, ...CURRENT_STATUSES, `${endTime}:00`, `${startTime}:00`]
     );
@@ -1225,7 +1323,7 @@ async function createReservation(input, rules) {
         reservationDate,
         `${startTime}:00`,
         `${endTime}:00`,
-        validation.durationMinutes,
+        durationMinutes,
         formatDateTime(checkinOpenAt),
         formatDateTime(checkinDeadlineAt),
         ruleSnapshot
@@ -1233,6 +1331,17 @@ async function createReservation(input, rules) {
     );
 
     const reservationId = insertResult.insertId;
+
+    // Occupy the time slots. The unique key on (seat_id, reservation_date, slot_start)
+    // is the last line of defence: if two overlapping reservations ever got this far,
+    // the second insert fails with ER_DUP_ENTRY and its transaction is rolled back.
+    await insertReservationSlots(connection, {
+      reservationId,
+      seatId: seat.id,
+      reservationDate,
+      startTime,
+      endTime
+    });
 
     await connection.commit();
 
@@ -1252,6 +1361,11 @@ async function createReservation(input, rules) {
     await connection.rollback();
 
     if (error && error.code === "ER_DUP_ENTRY") {
+      if (String(error.sqlMessage || error.message).includes("uk_seat_reservation_no")) {
+        throw buildError("预约编号重复", 503, "RESERVATION_NO_COLLISION");
+      }
+
+      // Duplicate slot: another reservation already occupies part of this time.
       throw buildError("预约创建发生并发冲突，请刷新后重试", 409, "RESERVATION_CONFLICT");
     }
 
