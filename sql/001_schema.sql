@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS `seat_reservation` (
   KEY `idx_seat_reservation_user_date` (`user_id`, `reservation_date`, `status`),
   KEY `idx_seat_reservation_seat_date` (`seat_id`, `reservation_date`, `start_time`),
   KEY `idx_seat_reservation_status_date` (`status`, `reservation_date`),
+  KEY `idx_seat_reservation_date` (`reservation_date`),
   CONSTRAINT `fk_seat_reservation_user` FOREIGN KEY (`user_id`) REFERENCES `app_user` (`id`),
   CONSTRAINT `fk_seat_reservation_seat` FOREIGN KEY (`seat_id`) REFERENCES `library_seat` (`id`),
   CONSTRAINT `fk_seat_reservation_zone` FOREIGN KEY (`zone_id`) REFERENCES `library_zone` (`id`)
