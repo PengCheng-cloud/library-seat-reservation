@@ -259,6 +259,7 @@ function buildAssistantSeatItem(item, index) {
     actualLabels: item.actualLabels || [],
     actualLabelsText: item.actualLabelsText || "",
     labelScoreItems: item.labelScoreItems || [],
+    modelEvidence: item.modelEvidence || [],
     labelScoresText: item.labelScoresText || "",
     primaryLabelScoreText: item.primaryLabelScoreText || "",
     neuralPredictedLabels: item.neuralPredictedLabels || [],

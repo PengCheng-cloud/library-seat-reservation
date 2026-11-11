@@ -1,0 +1,70 @@
+{
+  "train_samples": 27495,
+  "test_samples": 6721,
+  "test_requirements": 11,
+  "macro_f1": 0.9065,
+  "permutation_importance_by_group": {
+    "requirement (need_*, scene_*, time)": {
+      "features": 19,
+      "macro_f1_drop": 0.4559
+    },
+    "seat properties (seat_*)": {
+      "features": 12,
+      "macro_f1_drop": 0.1594
+    },
+    "zone and table-group statistics": {
+      "features": 15,
+      "macro_f1_drop": 0.1533
+    },
+    "preference matches (match_*), named in the reason": {
+      "features": 10,
+      "macro_f1_drop": 0.373
+    },
+    "conflicts and synergies": {
+      "features": 9,
+      "macro_f1_drop": 0.2545
+    },
+    "rule scores (score_*_match)": {
+      "features": 4,
+      "macro_f1_drop": 0.6813
+    }
+  },
+  "macro_f1_without_rule_scores": 0.7454,
+  "deployed_model": {
+    "seats_analysed": 55,
+    "features_named_per_reason_mean": 3.73,
+    "share_of_positive_contribution_from_named_features": 0.03,
+    "top_contributor_is_a_named_feature": 0.0,
+    "top3_contributors_overlap_with_named_features": 0.0606,
+    "most_frequent_top_contributors": {
+      "score_focus_match": 30,
+      "score_comfort_match": 10,
+      "score_device_match": 10,
+      "need_power_outlet": 5
+    },
+    "score_drop_when_removing": {
+      "named_features": 0.0687,
+      "same_number_of_top_contributors": 0.7828,
+      "same_number_of_random_features": 0.0165
+    }
+  },
+  "model_without_rule_scores": {
+    "seats_analysed": 55,
+    "features_named_per_reason_mean": 3.73,
+    "share_of_positive_contribution_from_named_features": 0.2689,
+    "top_contributor_is_a_named_feature": 0.2727,
+    "top3_contributors_overlap_with_named_features": 0.3636,
+    "most_frequent_top_contributors": {
+      "long_study_comfort": 15,
+      "match_window": 10,
+      "need_power_outlet": 10,
+      "device_quiet_synergy": 10,
+      "match_quiet": 5
+    },
+    "score_drop_when_removing": {
+      "named_features": 0.2882,
+      "same_number_of_top_contributors": 0.4717,
+      "same_number_of_random_features": 0.0185
+    }
+  }
+}

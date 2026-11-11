@@ -1,0 +1,9 @@
+# Python packages for the recommendation model (training, analysis, runtime inference).
+# Checked with Python 3.13, scikit-learn 1.9, pandas 3.0, numpy 2.5.
+scikit-learn
+pandas
+numpy
+scipy
+joblib
+openpyxl
+matplotlib

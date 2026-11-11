@@ -262,6 +262,9 @@ function buildSeatAlgorithmFields(seat, runtimeOverride) {
     actualLabels,
     actualLabelsText: actualLabels.join("、"),
     labelScoreItems,
+    // Features with the largest contribution to the model score of this seat, computed
+    // from the SVM weights (see docs/recommendation.md). Not shown in the Mini Program yet.
+    modelEvidence: seatRuntime && Array.isArray(seatRuntime.modelEvidence) ? seatRuntime.modelEvidence : [],
     labelScoresText: labelScoreItems
       .slice(0, 3)
       .map((item) => `${item.label}${item.percentText}`)

@@ -389,15 +389,74 @@ def build_empty_payload(started: float, started_at: str, seat_ids: list[str], me
     }
 
 
-def build_realtime_runtime(payload: dict[str, Any]) -> dict[str, Any]:
+class RuntimeContext:
+    """Everything that does not depend on the request.
+
+    Loading it takes most of the time of a prediction (Python imports, the model
+    file, the profiles of all seats). The worker mode (--serve) therefore builds it
+    once and keeps it in memory for all following requests.
+    """
+
+    def __init__(self) -> None:
+        self.meta = read_json(RUNTIME_META_PATH, {})
+        self.seat_profiles = build_seat_profiles(read_seats())
+        self.model = joblib.load(MODEL_PATH)
+        self.feature_columns = read_json(FEATURE_COLUMNS_PATH, FEATURE_COLUMNS)
+        self.linear_parts = extract_linear_parts(self.model)
+
+
+def extract_linear_parts(model: Any) -> dict[str, np.ndarray] | None:
+    """Scaler statistics and weights of the per-label linear SVMs, or None for other models."""
+    try:
+        means, scales, weights = [], [], []
+        for estimator in model.estimators_:
+            means.append(estimator.named_steps["scaler"].mean_)
+            scales.append(estimator.named_steps["scaler"].scale_)
+            weights.append(estimator.named_steps["model"].coef_.ravel())
+        return {"means": np.array(means), "scales": np.array(scales), "weights": np.array(weights)}
+    except (AttributeError, KeyError):
+        return None
+
+
+def build_model_evidence(context: RuntimeContext, demand: pd.Series, feature_values: np.ndarray, top_n: int = 3) -> list[dict[str, Any]]:
+    """The features that raise the score of this seat most, computed from the model itself.
+
+    For a linear model the contribution of feature j is w_j * (x_j - mean_j) / scale_j.
+    The contributions of the four labels are combined with the same label weights that
+    the ranking uses. Unlike `seatReason`, this is what the SVM actually relies on
+    (see docs/recommendation.md).
+    """
+    parts = context.linear_parts
+    if parts is None:
+        return []
+    per_label = parts["weights"] * (feature_values - parts["means"]) / parts["scales"]
+    contribution = demand_label_weights(demand) @ per_label
+    positive_total = float(np.clip(contribution, 0, None).sum())
+    if positive_total <= 0:
+        return []
+    evidence = []
+    for position in np.argsort(-contribution)[:top_n]:
+        if contribution[position] <= 0:
+            break
+        evidence.append(
+            {
+                "feature": context.feature_columns[int(position)],
+                "share": round(float(contribution[position]) / positive_total, 4),
+            }
+        )
+    return evidence
+
+
+def build_realtime_runtime(payload: dict[str, Any], context: RuntimeContext | None = None) -> dict[str, Any]:
     started = time.perf_counter()
     started_at = datetime.now(timezone.utc).isoformat()
-    meta = read_json(RUNTIME_META_PATH, {})
     seat_ids = normalize_seat_ids(payload)
     requested = set(seat_ids)
 
-    seats = read_seats()
-    seat_profiles = build_seat_profiles(seats)
+    if context is None:
+        context = RuntimeContext()
+    meta = context.meta
+    seat_profiles = context.seat_profiles
     if seat_ids:
         seat_profiles = seat_profiles[seat_profiles["seat_id"].astype(str).isin(requested)].copy()
         order = {seat_id: index for index, seat_id in enumerate(seat_ids)}
@@ -408,8 +467,8 @@ def build_realtime_runtime(payload: dict[str, Any]) -> dict[str, Any]:
         return build_empty_payload(started, started_at, seat_ids, meta)
 
     demand = build_demand_vector(payload)
-    model = joblib.load(MODEL_PATH)
-    feature_columns = read_json(FEATURE_COLUMNS_PATH, FEATURE_COLUMNS)
+    model = context.model
+    feature_columns = context.feature_columns
     label_thresholds = np.asarray(
         ((meta.get("experiment") or {}).get("deploymentModel") or {}).get("labelThresholds")
         or read_json(LABEL_THRESHOLDS_PATH, [0.5] * len(LABEL_COLUMNS)),
@@ -478,6 +537,7 @@ def build_realtime_runtime(payload: dict[str, Any]) -> dict[str, Any]:
             "seatLabelGap": round(abs(probability - 0.5), 4),
             "seatConfidenceLevel": confidence_level,
             "seatReason": build_reason(demand, seat, probability, label_score_values, cross),
+            "modelEvidence": build_model_evidence(context, demand, feature_frame.iloc[index].to_numpy(dtype=float)),
             "actualLabels": [],
             "predictedLabels": predicted_labels,
             "labelScores": label_score_values,
@@ -583,7 +643,38 @@ def build_realtime_runtime(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def serve() -> None:
+    """Worker mode: load the model once, then answer one request per input line.
+
+    Input line:  {"id": <any>, "payload": {...}}          (UTF-8 JSON)
+    Output line: {"id": <same>, "result": {...}}  or  {"id": <same>, "error": "..."}
+    The first output line is {"ready": true}. Output is ASCII-only JSON, so it does not
+    depend on the console encoding of the platform.
+    """
+
+    def write(message: dict[str, Any]) -> None:
+        sys.stdout.write(json.dumps(message, ensure_ascii=True, separators=(",", ":")) + "\n")
+        sys.stdout.flush()
+
+    context = RuntimeContext()
+    write({"ready": True})
+    for raw_line in sys.stdin.buffer:
+        line = raw_line.decode("utf-8").strip()
+        if not line:
+            continue
+        request_id = None
+        try:
+            request = json.loads(line)
+            request_id = request.get("id")
+            write({"id": request_id, "result": build_realtime_runtime(request.get("payload") or {}, context)})
+        except Exception as error:  # the worker must survive a bad request
+            write({"id": request_id, "error": f"{type(error).__name__}: {error}"})
+
+
 def main() -> None:
+    if "--serve" in sys.argv[1:]:
+        serve()
+        return
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     payload = build_realtime_runtime(read_request_payload())
